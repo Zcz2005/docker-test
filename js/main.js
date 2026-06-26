@@ -90,6 +90,29 @@ function initWorkflowTimeline() {
 }
 
 // ============================================
+// 通用标签页切换
+// ============================================
+
+function initTabs(tabSelector, panelIdPrefix, dataAttr) {
+  document.querySelectorAll(tabSelector).forEach(tab => {
+    tab.addEventListener('click', () => {
+      const key = tab.dataset[dataAttr];
+      const group = tab.parentElement;
+
+      group.querySelectorAll(tabSelector).forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const panelsContainer = group.nextElementSibling;
+      if (!panelsContainer) return;
+
+      panelsContainer.querySelectorAll('[id^="' + panelIdPrefix + '"]').forEach(p => {
+        p.classList.toggle('active', p.id === `${panelIdPrefix}${key}`);
+      });
+    });
+  });
+}
+
+// ============================================
 // 智能合约标签页
 // ============================================
 
@@ -134,7 +157,13 @@ const demoSteps = {
     action: 'createBatch',
     operator: '寿光绿野合作社 · 张农户',
     detail: '创建批次 GC-TOM-2026-SD-00421，录入有机番茄种植信息',
-    data: { product: '有机番茄', quantity: '500kg', location: '山东寿光' },
+    dbOps: [
+      { type: 'insert', op: 'IPFS', sql: 'PUT metadata → CID: QmX7yK9p...3mNw' },
+      { type: 'insert', op: 'INSERT', sql: 'product_batches (batch_id, status=PENDING)' },
+      { type: 'insert', op: 'INSERT', sql: 'blockchain_transactions (tx_id, CreateBatch)' },
+      { type: 'update', op: 'UPDATE', sql: 'product_batches SET chain_status=CONFIRMED' },
+      { type: 'cache', op: 'REDIS', sql: 'DEL trace:query:GC-TOM-2026-SD-00421' },
+    ],
   },
   harvest: {
     icon: '🧺',
@@ -142,7 +171,11 @@ const demoSteps = {
     action: 'addTraceRecord',
     operator: '寿光绿野合作社 · 采收队',
     detail: '采收 500kg 有机番茄，农残快检合格',
-    data: { quantity: '500kg', test: '农残检测 PASS' },
+    dbOps: [
+      { type: 'insert', op: 'INSERT', sql: 'trace_records (stage=HARVESTING)' },
+      { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=HARVESTED' },
+      { type: 'insert', op: 'INSERT', sql: 'blockchain_transactions (AddTraceRecord)' },
+    ],
   },
   process: {
     icon: '🏭',
@@ -150,7 +183,12 @@ const demoSteps = {
     action: 'transferOwnership + addTraceRecord',
     operator: '潍坊绿野加工厂',
     detail: '清洗分拣包装，拆分为 1000 盒 × 500g',
-    data: { process: '清洗→分拣→包装', packages: '1000盒' },
+    dbOps: [
+      { type: 'insert', op: 'INSERT', sql: 'batch_transfers (from_org → to_org)' },
+      { type: 'insert', op: 'INSERT', sql: 'trace_records (stage=PROCESSING)' },
+      { type: 'insert', op: 'INSERT', sql: 'product_batches ×1000 (parent_batch_id)' },
+      { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=SPLIT' },
+    ],
   },
   inspect: {
     icon: '🔬',
@@ -158,7 +196,11 @@ const demoSteps = {
     action: 'submitQualityReport',
     operator: '山东省农产品质量检测中心',
     detail: '农药残留、重金属、微生物检测全部合格',
-    data: { result: 'PASS', cert: 'ORG-2026-SD-0088' },
+    dbOps: [
+      { type: 'insert', op: 'IPFS', sql: 'PUT report.pdf → CID: QmK9p2x...Rt' },
+      { type: 'insert', op: 'INSERT', sql: 'quality_reports (result=PASS)' },
+      { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=INSPECTED' },
+    ],
   },
   logistics: {
     icon: '🚚',
@@ -166,7 +208,12 @@ const demoSteps = {
     action: 'addTraceRecord + submitIoTData',
     operator: '顺丰冷链物流',
     detail: '冷链运输至北京，全程温度 2-6°C',
-    data: { temp: '4.2°C', humidity: '65%', vehicle: '鲁B·12345' },
+    dbOps: [
+      { type: 'insert', op: 'INSERT', sql: 'iot_sensor_data (temp=4.2, TimescaleDB)' },
+      { type: 'cache', op: 'REDIS', sql: 'HSET iot:latest:DEV-TEMP-001' },
+      { type: 'insert', op: 'INSERT', sql: 'trace_records (stage=LOGISTICS)' },
+      { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=IN_TRANSIT' },
+    ],
   },
   retail: {
     icon: '🏪',
@@ -174,7 +221,11 @@ const demoSteps = {
     action: 'confirmDelivery + generateQRCode',
     operator: '北京华联超市朝阳店',
     detail: '确认收货并上架销售，生成消费者溯源二维码',
-    data: { price: '¥12.8/盒', shelf: '蔬菜区 A-03' },
+    dbOps: [
+      { type: 'insert', op: 'INSERT', sql: 'trace_records (stage=RETAIL)' },
+      { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=ON_SHELF' },
+      { type: 'cache', op: 'REDIS', sql: 'SET trace:query:{batchId} EX 300' },
+    ],
   },
 };
 
@@ -193,6 +244,28 @@ function generateHash() {
   hash += '...';
   for (let i = 0; i < 4; i++) hash += chars[Math.floor(Math.random() * 16)];
   return hash;
+}
+
+function addDbLogItems(stepKey) {
+  const step = demoSteps[stepKey];
+  const dbLog = document.getElementById('dbLog');
+  if (!dbLog || !step.dbOps) return;
+
+  const empty = dbLog.querySelector('.db-log-empty');
+  if (empty) empty.remove();
+
+  step.dbOps.forEach((op, i) => {
+    setTimeout(() => {
+      const item = document.createElement('div');
+      item.className = `db-log-item ${op.type}`;
+      item.innerHTML = `
+        <div class="db-op">${op.op}</div>
+        <div class="db-sql">${op.sql}</div>
+      `;
+      dbLog.appendChild(item);
+      dbLog.scrollTop = dbLog.scrollHeight;
+    }, i * 200);
+  });
 }
 
 function addBlock(stepKey) {
@@ -296,6 +369,7 @@ function executeDemoStep() {
 
   setTimeout(() => {
     addBlock(key);
+    addDbLogItems(key);
     addTraceItem(key);
     demoState.completed.add(key);
     demoState.currentStep++;
@@ -333,7 +407,10 @@ function resetDemo() {
   `;
 
   const timeline = document.getElementById('demoTraceTimeline');
-  timeline.innerHTML = '<div class="trace-empty">点击左侧按钮开始模拟上链操作</div>';
+  timeline.innerHTML = '<div class="trace-empty">点击左侧按钮开始模拟完整数据流（IPFS → DB → 区块链 → 缓存）</div>';
+
+  const dbLog = document.getElementById('dbLog');
+  if (dbLog) dbLog.innerHTML = '<div class="db-log-empty">等待操作...</div>';
 
   document.getElementById('demoQR').style.display = 'none';
   document.getElementById('demoStartBtn').disabled = false;
@@ -436,4 +513,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDemoUI();
   initScrollAnimations();
   updateActiveNav();
+
+  initTabs('.schema-tab', 'schema-', 'schema');
+  initTabs('.api-tab', 'api-', 'api');
+  initTabs('.api-ex-tab', 'example-', 'example');
 });

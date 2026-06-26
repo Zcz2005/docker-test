@@ -22,15 +22,16 @@
         <span></span><span></span><span></span>
       </button>
       <ul class="nav-menu" id="navMenu">
-        <li><a href="#overview">案例概述</a></li>
-        <li><a href="#problem">痛点分析</a></li>
-        <li><a href="#solution">解决方案</a></li>
-        <li><a href="#architecture">技术架构</a></li>
+        <li><a href="#overview">概述</a></li>
+        <li><a href="#architecture">架构</a></li>
+        <li><a href="#database">数据库</a></li>
+        <li><a href="#api">API</a></li>
+        <li><a href="#dataflow">数据流</a></li>
         <li><a href="#workflow">业务流程</a></li>
-        <li><a href="#smart-contract">智能合约</a></li>
-        <li><a href="#demo">交互演示</a></li>
-        <li><a href="#roi">效益分析</a></li>
-        <li><a href="#faq">常见问题</a></li>
+        <li><a href="#smart-contract">合约</a></li>
+        <li><a href="#deployment">部署</a></li>
+        <li><a href="#demo">演示</a></li>
+        <li><a href="#faq">FAQ</a></li>
       </ul>
     </nav>
   </header>
@@ -48,20 +49,20 @@
         </p>
         <div class="hero-stats">
           <div class="stat">
-            <span class="stat-num">6</span>
-            <span class="stat-label">供应链环节</span>
+            <span class="stat-num">13</span>
+            <span class="stat-label">数据库表</span>
           </div>
           <div class="stat">
-            <span class="stat-num">12+</span>
-            <span class="stat-label">参与角色</span>
+            <span class="stat-num">28+</span>
+            <span class="stat-label">API 接口</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">5</span>
+            <span class="stat-label">存储引擎</span>
           </div>
           <div class="stat">
             <span class="stat-num">&lt;3s</span>
             <span class="stat-label">溯源查询响应</span>
-          </div>
-          <div class="stat">
-            <span class="stat-num">100%</span>
-            <span class="stat-label">数据不可篡改</span>
           </div>
         </div>
         <div class="hero-actions">
@@ -583,11 +584,974 @@
       </div>
     </section>
 
+    <!-- 数据库设计 -->
+    <section class="section" id="database">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">05 · 数据库设计</span>
+          <h2>多存储引擎数据架构</h2>
+          <p>链上存证 + 链下业务库 + 时序库 + 缓存 + 对象存储的混合存储方案</p>
+        </div>
+
+        <!-- 存储架构总览 -->
+        <div class="storage-overview">
+          <div class="storage-card">
+            <div class="storage-icon">🐘</div>
+            <h4>PostgreSQL 15</h4>
+            <p>核心业务库</p>
+            <ul>
+              <li>组织、用户、批次、溯源记录</li>
+              <li>质检报告、召回记录、审计日志</li>
+              <li>区块链交易同步表</li>
+            </ul>
+            <span class="storage-badge">13 张核心表</span>
+          </div>
+          <div class="storage-card">
+            <div class="storage-icon">📊</div>
+            <h4>TimescaleDB</h4>
+            <p>IoT 时序数据</p>
+            <ul>
+              <li>温湿度传感器数据</li>
+              <li>GPS 定位轨迹</li>
+              <li>设备状态监控</li>
+            </ul>
+            <span class="storage-badge">Hypertable 自动分区</span>
+          </div>
+          <div class="storage-card">
+            <div class="storage-icon">⚡</div>
+            <h4>Redis 7</h4>
+            <p>缓存与会话</p>
+            <ul>
+              <li>溯源查询结果缓存</li>
+              <li>JWT Token 黑名单</li>
+              <li>分布式锁、限流计数</li>
+            </ul>
+            <span class="storage-badge">6 类 Key 模式</span>
+          </div>
+          <div class="storage-card">
+            <div class="storage-icon">📁</div>
+            <h4>MinIO + IPFS</h4>
+            <p>非结构化文件</p>
+            <ul>
+              <li>产品图片、视频</li>
+              <li>质检报告 PDF</li>
+              <li>链上仅存 IPFS CID 哈希</li>
+            </ul>
+            <span class="storage-badge">链上哈希 + 链下原文</span>
+          </div>
+        </div>
+
+        <!-- ER 关系图 -->
+        <div class="er-diagram">
+          <h3>核心实体关系图（ER Diagram）</h3>
+          <div class="er-visual">
+            <div class="er-entity" data-entity="organizations">
+              <div class="er-entity-header">organizations</div>
+              <div class="er-entity-fields">id, name, msp_id, org_type, cert...</div>
+            </div>
+            <div class="er-relation">1:N</div>
+            <div class="er-entity" data-entity="users">
+              <div class="er-entity-header">users</div>
+              <div class="er-entity-fields">id, org_id, username, role, did...</div>
+            </div>
+            <div class="er-relation">1:N</div>
+            <div class="er-entity highlight" data-entity="product_batches">
+              <div class="er-entity-header">product_batches ★</div>
+              <div class="er-entity-fields">batch_id, product_name, status, chain_tx...</div>
+            </div>
+            <div class="er-branch">
+              <div class="er-branch-line"></div>
+              <div class="er-branch-items">
+                <div class="er-entity" data-entity="trace_records">
+                  <div class="er-entity-header">trace_records</div>
+                  <div class="er-entity-fields">batch_id, stage, operator, data_hash</div>
+                </div>
+                <div class="er-entity" data-entity="quality_reports">
+                  <div class="er-entity-header">quality_reports</div>
+                  <div class="er-entity-fields">batch_id, result, report_hash</div>
+                </div>
+                <div class="er-entity" data-entity="blockchain_tx">
+                  <div class="er-entity-header">blockchain_transactions</div>
+                  <div class="er-entity-fields">tx_id, block_num, chaincode, status</div>
+                </div>
+                <div class="er-entity" data-entity="ipfs_files">
+                  <div class="er-entity-header">ipfs_files</div>
+                  <div class="er-entity-fields">cid, file_type, ref_table, ref_id</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="er-note">★ product_batches 为核心主表，通过 batch_id 关联溯源记录、质检报告、链上交易和文件存储</p>
+        </div>
+
+        <!-- 表结构 SQL -->
+        <div class="db-schema">
+          <h3>数据库表结构（PostgreSQL DDL）</h3>
+          <div class="schema-tabs">
+            <button class="schema-tab active" data-schema="core">核心表</button>
+            <button class="schema-tab" data-schema="trace">溯源表</button>
+            <button class="schema-tab" data-schema="chain">链同步表</button>
+            <button class="schema-tab" data-schema="iot">IoT 时序表</button>
+            <button class="schema-tab" data-schema="redis">Redis 设计</button>
+          </div>
+          <div class="schema-panels">
+            <div class="schema-panel active" id="schema-core">
+              <div class="code-header"><span>sql/schema/001_core_tables.sql</span><button class="copy-btn" data-copy="schema-core">复制</button></div>
+              <pre><code id="code-schema-core">-- ============================================
+-- 组织与用户
+-- ============================================
+
+CREATE TABLE organizations (
+    id              BIGSERIAL PRIMARY KEY,
+    org_code        VARCHAR(32)  NOT NULL UNIQUE,       -- 组织编码 ORG-FARMER-001
+    name            VARCHAR(128) NOT NULL,              -- 组织名称
+    org_type        VARCHAR(32)  NOT NULL,              -- FARMER/PROCESSOR/LOGISTICS/RETAILER/INSPECTOR/REGULATOR
+    msp_id          VARCHAR(64)  NOT NULL UNIQUE,       -- Fabric MSP ID
+    fabric_ca_cert  TEXT,                                 -- Fabric CA 证书
+    contact_person  VARCHAR(64),
+    contact_phone   VARCHAR(20),
+    address         VARCHAR(256),
+    status          SMALLINT     DEFAULT 1,               -- 1=正常 0=禁用
+    created_at      TIMESTAMPTZ  DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_org_type ON organizations(org_type);
+CREATE INDEX idx_org_status ON organizations(status);
+
+CREATE TABLE users (
+    id              BIGSERIAL PRIMARY KEY,
+    org_id          BIGINT       NOT NULL REFERENCES organizations(id),
+    username        VARCHAR(64)  NOT NULL UNIQUE,
+    password_hash   VARCHAR(256) NOT NULL,                -- bcrypt
+    real_name       VARCHAR(64),
+    role            VARCHAR(32)  NOT NULL,                -- ADMIN/OPERATOR/VIEWER
+    did             VARCHAR(128),                          -- 链上数字身份
+    fabric_cert     TEXT,                                  -- Fabric 用户证书
+    phone           VARCHAR(20),
+    last_login_at   TIMESTAMPTZ,
+    status          SMALLINT     DEFAULT 1,
+    created_at      TIMESTAMPTZ  DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_users_org ON users(org_id);
+CREATE INDEX idx_users_role ON users(role);
+
+-- ============================================
+-- 产品批次（核心主表）
+-- ============================================
+
+CREATE TABLE product_batches (
+    id              BIGSERIAL PRIMARY KEY,
+    batch_id        VARCHAR(64)  NOT NULL UNIQUE,         -- GC-TOM-2026-SD-00421
+    product_name    VARCHAR(128) NOT NULL,
+    category        VARCHAR(64)  NOT NULL,                -- 蔬菜/水果/粮食
+    quantity        DECIMAL(12,2) NOT NULL,
+    unit            VARCHAR(16)  NOT NULL DEFAULT 'kg',
+    status          VARCHAR(32)  NOT NULL DEFAULT 'CREATED',
+    -- CREATED/HARVESTED/PROCESSING/INSPECTED/IN_TRANSIT/ON_SHELF/SOLD/RECALLED
+    parent_batch_id VARCHAR(64)  REFERENCES product_batches(batch_id),
+    org_id          BIGINT       NOT NULL REFERENCES organizations(id),
+    created_by      BIGINT       NOT NULL REFERENCES users(id),
+    current_owner   BIGINT       REFERENCES users(id),
+    metadata_hash   VARCHAR(128),                          -- IPFS CID
+    chain_tx_id     VARCHAR(128),                          -- 上链交易 ID
+    block_number    BIGINT,
+    chain_status    VARCHAR(16)  DEFAULT 'PENDING',        -- PENDING/CONFIRMED/FAILED
+    planted_at      DATE,
+    harvested_at    TIMESTAMPTZ,
+    expired_at      TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ  DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_batch_status ON product_batches(status);
+CREATE INDEX idx_batch_org ON product_batches(org_id);
+CREATE INDEX idx_batch_parent ON product_batches(parent_batch_id);
+CREATE INDEX idx_batch_chain ON product_batches(chain_tx_id);
+CREATE INDEX idx_batch_created ON product_batches(created_at DESC);</code></pre>
+            </div>
+            <div class="schema-panel" id="schema-trace">
+              <div class="code-header"><span>sql/schema/002_trace_tables.sql</span><button class="copy-btn" data-copy="schema-trace">复制</button></div>
+              <pre><code id="code-schema-trace">-- ============================================
+-- 溯源记录
+-- ============================================
+
+CREATE TABLE trace_records (
+    id              BIGSERIAL PRIMARY KEY,
+    record_id       VARCHAR(64)  NOT NULL UNIQUE,         -- TR-2026-00421-003
+    batch_id        VARCHAR(64)  NOT NULL REFERENCES product_batches(batch_id),
+    stage           VARCHAR(32)  NOT NULL,
+    -- PLANTING/HARVESTING/PROCESSING/INSPECTION/LOGISTICS/RETAIL
+    action          VARCHAR(256) NOT NULL,                -- 具体操作描述
+    operator_id     BIGINT       NOT NULL REFERENCES users(id),
+    org_id          BIGINT       NOT NULL REFERENCES organizations(id),
+    location        VARCHAR(256),
+    latitude        DECIMAL(10,7),
+    longitude       DECIMAL(10,7),
+    data_hash       VARCHAR(128) NOT NULL,                -- 业务数据 IPFS 哈希
+    chain_tx_id     VARCHAR(128),
+    chain_status    VARCHAR(16)  DEFAULT 'PENDING',
+    extra_data      JSONB,                                 -- 扩展字段
+    operated_at     TIMESTAMPTZ  NOT NULL,
+    created_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_trace_batch ON trace_records(batch_id);
+CREATE INDEX idx_trace_stage ON trace_records(stage);
+CREATE INDEX idx_trace_operated ON trace_records(operated_at DESC);
+CREATE INDEX idx_trace_batch_stage ON trace_records(batch_id, stage);
+
+-- ============================================
+-- 质检报告
+-- ============================================
+
+CREATE TABLE quality_reports (
+    id              BIGSERIAL PRIMARY KEY,
+    report_id       VARCHAR(64)  NOT NULL UNIQUE,
+    batch_id        VARCHAR(64)  NOT NULL REFERENCES product_batches(batch_id),
+    inspector_id    BIGINT       NOT NULL REFERENCES users(id),
+    org_id          BIGINT       NOT NULL REFERENCES organizations(id),
+    test_items      JSONB        NOT NULL,                -- ["农药残留","重金属"]
+    result          VARCHAR(8)   NOT NULL,                -- PASS/FAIL
+    report_hash     VARCHAR(128) NOT NULL,                -- IPFS CID
+    certification_no VARCHAR(64),
+    chain_tx_id     VARCHAR(128),
+    issued_at       TIMESTAMPTZ  NOT NULL,
+    expires_at      TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_qr_batch ON quality_reports(batch_id);
+CREATE INDEX idx_qr_result ON quality_reports(result);
+
+-- ============================================
+-- 批次流转记录
+-- ============================================
+
+CREATE TABLE batch_transfers (
+    id              BIGSERIAL PRIMARY KEY,
+    batch_id        VARCHAR(64)  NOT NULL REFERENCES product_batches(batch_id),
+    from_org_id     BIGINT       NOT NULL REFERENCES organizations(id),
+    to_org_id       BIGINT       NOT NULL REFERENCES organizations(id),
+    from_user_id    BIGINT       NOT NULL REFERENCES users(id),
+    to_user_id      BIGINT       NOT NULL REFERENCES users(id),
+    transfer_type   VARCHAR(32)  NOT NULL,                -- OWNERSHIP/HANDOVER
+    chain_tx_id     VARCHAR(128),
+    transferred_at  TIMESTAMPTZ  NOT NULL,
+    created_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_transfer_batch ON batch_transfers(batch_id);
+
+-- ============================================
+-- 召回记录
+-- ============================================
+
+CREATE TABLE recall_records (
+    id              BIGSERIAL PRIMARY KEY,
+    recall_id       VARCHAR(64)  NOT NULL UNIQUE,
+    batch_id        VARCHAR(64)  NOT NULL REFERENCES product_batches(batch_id),
+    reason          TEXT         NOT NULL,
+    initiated_by    BIGINT       NOT NULL REFERENCES users(id),
+    status          VARCHAR(16)  DEFAULT 'ACTIVE',         -- ACTIVE/RESOLVED
+    affected_qty    DECIMAL(12,2),
+    chain_tx_id     VARCHAR(128),
+    initiated_at    TIMESTAMPTZ  NOT NULL,
+    resolved_at     TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ  DEFAULT NOW()
+);</code></pre>
+            </div>
+            <div class="schema-panel" id="schema-chain">
+              <div class="code-header"><span>sql/schema/003_blockchain_sync.sql</span><button class="copy-btn" data-copy="schema-chain">复制</button></div>
+              <pre><code id="code-schema-chain">-- ============================================
+-- 区块链交易同步表（链下镜像）
+-- ============================================
+
+CREATE TABLE blockchain_transactions (
+    id              BIGSERIAL PRIMARY KEY,
+    tx_id           VARCHAR(128) NOT NULL UNIQUE,         -- Fabric TxID
+    channel         VARCHAR(64)  NOT NULL DEFAULT 'greenchain-channel',
+    chaincode       VARCHAR(64)  NOT NULL,                -- batch/trace/quality
+    function_name   VARCHAR(64)  NOT NULL,                -- CreateBatch/AddTraceRecord
+    args            JSONB        NOT NULL,                -- 调用参数
+    block_number    BIGINT,
+    block_hash      VARCHAR(128),
+    status          VARCHAR(16)  NOT NULL DEFAULT 'SUBMITTED',
+    -- SUBMITTED/ENDORSED/COMMITTED/FAILED
+    submitter_msp   VARCHAR(64),
+    submitter_id    BIGINT       REFERENCES users(id),
+    ref_table       VARCHAR(64),                           -- 关联业务表
+    ref_id          VARCHAR(64),                           -- 关联业务 ID
+    error_message   TEXT,
+    submitted_at    TIMESTAMPTZ  DEFAULT NOW(),
+    committed_at    TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_bctx_status ON blockchain_transactions(status);
+CREATE INDEX idx_bctx_ref ON blockchain_transactions(ref_table, ref_id);
+CREATE INDEX idx_bctx_block ON blockchain_transactions(block_number DESC);
+
+-- ============================================
+-- IPFS 文件索引
+-- ============================================
+
+CREATE TABLE ipfs_files (
+    id              BIGSERIAL PRIMARY KEY,
+    cid             VARCHAR(128) NOT NULL UNIQUE,         -- IPFS Content ID
+    file_name       VARCHAR(256) NOT NULL,
+    file_type       VARCHAR(32)  NOT NULL,                -- IMAGE/VIDEO/PDF/JSON
+    file_size       BIGINT,
+    mime_type       VARCHAR(64),
+    ref_table       VARCHAR(64),                           -- trace_records/quality_reports
+    ref_id          VARCHAR(64),
+    uploaded_by     BIGINT       REFERENCES users(id),
+    storage_backend VARCHAR(16)  DEFAULT 'IPFS',           -- IPFS/MINIO
+    created_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_ipfs_ref ON ipfs_files(ref_table, ref_id);
+
+-- ============================================
+-- 审计日志
+-- ============================================
+
+CREATE TABLE audit_logs (
+    id              BIGSERIAL PRIMARY KEY,
+    user_id         BIGINT       REFERENCES users(id),
+    org_id          BIGINT       REFERENCES organizations(id),
+    action          VARCHAR(64)  NOT NULL,                -- CREATE_BATCH/QUERY_TRACE/RECALL
+    resource_type   VARCHAR(64),
+    resource_id     VARCHAR(64),
+    ip_address      INET,
+    user_agent      VARCHAR(512),
+    request_data    JSONB,
+    response_code   INT,
+    created_at      TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX idx_audit_user ON audit_logs(user_id);
+CREATE INDEX idx_audit_action ON audit_logs(action);
+CREATE INDEX idx_audit_created ON audit_logs(created_at DESC);
+
+-- 按月分区（生产环境）
+-- CREATE TABLE audit_logs_2026_06 PARTITION OF audit_logs
+--     FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');</code></pre>
+            </div>
+            <div class="schema-panel" id="schema-iot">
+              <div class="code-header"><span>sql/schema/004_iot_timescale.sql</span><button class="copy-btn" data-copy="schema-iot">复制</button></div>
+              <pre><code id="code-schema-iot">-- ============================================
+-- TimescaleDB IoT 时序数据
+-- ============================================
+
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+
+CREATE TABLE iot_sensor_data (
+    time            TIMESTAMPTZ  NOT NULL,
+    device_id       VARCHAR(64)  NOT NULL,
+    batch_id        VARCHAR(64),                           -- 关联批次
+    sensor_type     VARCHAR(32)  NOT NULL,                 -- TEMPERATURE/HUMIDITY/GPS
+    value           DECIMAL(10,4) NOT NULL,
+    unit            VARCHAR(16),                           -- °C / % / km/h
+    latitude        DECIMAL(10,7),
+    longitude       DECIMAL(10,7),
+    vehicle_id      VARCHAR(32),
+    is_alert        BOOLEAN      DEFAULT FALSE,
+    chain_tx_id     VARCHAR(128),                          -- 关键数据上链交易
+    metadata        JSONB
+);
+
+-- 转为 Hypertable，按天自动分区
+SELECT create_hypertable('iot_sensor_data', 'time',
+    chunk_time_interval => INTERVAL '1 day');
+
+CREATE INDEX idx_iot_device_time ON iot_sensor_data(device_id, time DESC);
+CREATE INDEX idx_iot_batch ON iot_sensor_data(batch_id, time DESC);
+CREATE INDEX idx_iot_alert ON iot_sensor_data(is_alert) WHERE is_alert = TRUE;
+
+-- 数据保留策略：原始数据保留 90 天，聚合数据保留 2 年
+SELECT add_retention_policy('iot_sensor_data', INTERVAL '90 days');
+
+-- 连续聚合：每小时温湿度均值
+CREATE MATERIALIZED VIEW iot_hourly_agg
+WITH (timescaledb.continuous) AS
+SELECT
+    time_bucket('1 hour', time) AS hour,
+    device_id,
+    batch_id,
+    sensor_type,
+    AVG(value) AS avg_value,
+    MIN(value) AS min_value,
+    MAX(value) AS max_value,
+    COUNT(*)   AS sample_count
+FROM iot_sensor_data
+GROUP BY hour, device_id, batch_id, sensor_type;
+
+-- IoT 设备注册表（存在 PostgreSQL）
+CREATE TABLE iot_devices (
+    id              BIGSERIAL PRIMARY KEY,
+    device_id       VARCHAR(64)  NOT NULL UNIQUE,
+    device_name     VARCHAR(128),
+    device_type     VARCHAR(32)  NOT NULL,                -- TEMP_SENSOR/GPS_TRACKER/RFID
+    org_id          BIGINT       NOT NULL REFERENCES organizations(id),
+    batch_id        VARCHAR(64)  REFERENCES product_batches(batch_id),
+    mqtt_topic      VARCHAR(256),
+    status          VARCHAR(16)  DEFAULT 'ONLINE',
+    last_seen_at    TIMESTAMPTZ,
+    config          JSONB,
+    created_at      TIMESTAMPTZ  DEFAULT NOW()
+);</code></pre>
+            </div>
+            <div class="schema-panel" id="schema-redis">
+              <div class="code-header"><span>docs/redis-key-design.md</span><button class="copy-btn" data-copy="schema-redis">复制</button></div>
+              <pre><code id="code-schema-redis"># Redis Key 设计规范
+
+# ============================================
+# 1. 溯源查询缓存（TTL: 5 分钟）
+# ============================================
+# Key:   trace:query:{batch_id}
+# Type:  String (JSON)
+# Value: 完整溯源时间线 JSON
+# 示例:  trace:query:GC-TOM-2026-SD-00421
+
+# ============================================
+# 2. 用户 Session（TTL: 24 小时）
+# ============================================
+# Key:   session:{user_id}
+# Type:  Hash
+# Fields: token, org_id, role, msp_id, login_at
+
+# ============================================
+# 3. JWT 黑名单（TTL: Token 剩余有效期）
+# ============================================
+# Key:   jwt:blacklist:{jti}
+# Type:  String
+# Value: "1"
+
+# ============================================
+# 4. 分布式锁（上链操作防重）
+# ============================================
+# Key:   lock:chain:{batch_id}:{action}
+# Type:  String
+# TTL:   30 秒
+# 示例:  lock:chain:GC-TOM-2026-SD-00421:createBatch
+
+# ============================================
+# 5. API 限流（滑动窗口）
+# ============================================
+# Key:   ratelimit:{api}:{user_id}
+# Type:  Sorted Set (score = timestamp)
+# 规则:  每用户每分钟 60 次查询
+
+# ============================================
+# 6. 实时 IoT 数据（最新值）
+# ============================================
+# Key:   iot:latest:{device_id}
+# Type:  Hash
+# Fields: temperature, humidity, lat, lng, updated_at
+# TTL:   1 小时
+
+# ============================================
+# 7. 区块同步进度
+# ============================================
+# Key:   chain:last_block
+# Type:  String
+# Value: 最新已同步区块号
+
+# ============================================
+# 8. 待上链队列（Redis List 作为缓冲）
+# ============================================
+# Key:   queue:chain:pending
+# Type:  List
+# Value: JSON {tx_id, chaincode, function, args}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据存储策略 -->
+        <div class="storage-strategy">
+          <h3>链上 vs 链下存储决策矩阵</h3>
+          <div class="tech-table-wrapper">
+            <table class="tech-table">
+              <thead>
+                <tr>
+                  <th>数据类型</th>
+                  <th>存储位置</th>
+                  <th>存储引擎</th>
+                  <th>理由</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>批次 ID、状态、所有权</td>
+                  <td>链上 + 链下</td>
+                  <td>Fabric + PostgreSQL</td>
+                  <td>链上存证不可篡改，链下镜像供快速查询</td>
+                </tr>
+                <tr>
+                  <td>溯源记录哈希、操作签名</td>
+                  <td>链上</td>
+                  <td>Fabric Ledger</td>
+                  <td>关键信任数据，必须链上共识</td>
+                </tr>
+                <tr>
+                  <td>产品图片、视频</td>
+                  <td>链下</td>
+                  <td>IPFS + MinIO</td>
+                  <td>文件过大，链上仅存 CID 哈希</td>
+                </tr>
+                <tr>
+                  <td>质检报告 PDF</td>
+                  <td>链下（哈希上链）</td>
+                  <td>IPFS</td>
+                  <td>报告原文存 IPFS，SHA256 哈希写入链上</td>
+                </tr>
+                <tr>
+                  <td>IoT 温湿度/GPS</td>
+                  <td>链下为主，异常上链</td>
+                  <td>TimescaleDB + Fabric</td>
+                  <td>高频采集存时序库，超阈值数据上链告警</td>
+                </tr>
+                <tr>
+                  <td>用户账号、权限</td>
+                  <td>链下</td>
+                  <td>PostgreSQL</td>
+                  <td>业务数据，不需要上链</td>
+                </tr>
+                <tr>
+                  <td>溯源查询结果</td>
+                  <td>缓存</td>
+                  <td>Redis</td>
+                  <td>聚合查询结果缓存 5 分钟，降低 DB 压力</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API 接口设计 -->
+    <section class="section section-alt" id="api">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">06 · API 接口</span>
+          <h2>RESTful API 接口设计</h2>
+          <p>28+ 接口覆盖认证、批次、溯源、质检、IoT、查询全业务场景</p>
+        </div>
+
+        <!-- 认证流程 -->
+        <div class="api-auth-flow">
+          <h3>认证与鉴权流程</h3>
+          <div class="flow-steps-horizontal">
+            <div class="flow-step-h"><span>1</span>用户登录<br/><small>POST /auth/login</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step-h"><span>2</span>颁发 JWT<br/><small>含 org_id, role</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step-h"><span>3</span>API 请求<br/><small>Authorization: Bearer</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step-h"><span>4</span>网关鉴权<br/><small>Kong JWT 插件</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step-h"><span>5</span>上链操作<br/><small>Fabric 证书签名</small></div>
+          </div>
+        </div>
+
+        <!-- API 列表 -->
+        <div class="api-list">
+          <h3>接口总览</h3>
+          <div class="api-tabs">
+            <button class="api-tab active" data-api="auth">认证</button>
+            <button class="api-tab" data-api="batch">批次</button>
+            <button class="api-tab" data-api="trace">溯源</button>
+            <button class="api-tab" data-api="quality">质检</button>
+            <button class="api-tab" data-api="iot">IoT</button>
+            <button class="api-tab" data-api="query">查询</button>
+          </div>
+          <div class="api-panels">
+            <div class="api-panel active" id="api-auth">
+              <table class="api-table">
+                <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>权限</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/auth/login</td><td>用户登录</td><td>公开</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/auth/logout</td><td>退出登录</td><td>登录用户</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/auth/refresh</td><td>刷新 Token</td><td>登录用户</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/auth/profile</td><td>获取当前用户信息</td><td>登录用户</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="api-panel" id="api-batch">
+              <table class="api-table">
+                <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>权限</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/batches</td><td>创建产品批次（上链）</td><td>FARMER</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/batches</td><td>批次列表（分页筛选）</td><td>登录用户</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/batches/{batchId}</td><td>批次详情</td><td>登录用户</td></tr>
+                  <tr><td><span class="method put">PUT</span></td><td>/api/v1/batches/{batchId}/status</td><td>更新批次状态</td><td>OWNER</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/batches/{batchId}/transfer</td><td>转移所有权（上链）</td><td>OWNER</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/batches/{batchId}/split</td><td>批次拆分（上链）</td><td>PROCESSOR</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/batches/{batchId}/recall</td><td>发起召回（上链）</td><td>REGULATOR</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="api-panel" id="api-trace">
+              <table class="api-table">
+                <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>权限</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/traces</td><td>添加溯源记录（上链）</td><td>ALL_ORG</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/traces/batch/{batchId}</td><td>获取批次溯源链</td><td>登录用户</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/traces/{recordId}</td><td>单条溯源记录详情</td><td>登录用户</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/traces/{recordId}/files</td><td>上传溯源附件到 IPFS</td><td>OPERATOR</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/traces/{recordId}/verify</td><td>验证链上数据完整性</td><td>公开</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="api-panel" id="api-quality">
+              <table class="api-table">
+                <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>权限</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/quality/reports</td><td>提交质检报告（上链）</td><td>INSPECTOR</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/quality/reports/{reportId}</td><td>查看质检报告</td><td>登录用户</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/quality/reports/batch/{batchId}</td><td>批次质检记录</td><td>登录用户</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/quality/verify</td><td>验证报告哈希</td><td>公开</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="api-panel" id="api-iot">
+              <table class="api-table">
+                <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>权限</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/iot/devices</td><td>注册 IoT 设备</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/iot/devices/{deviceId}/data</td><td>查询设备时序数据</td><td>登录用户</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/iot/batch/{batchId}/telemetry</td><td>批次关联遥测数据</td><td>登录用户</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/iot/alerts</td><td>温湿度异常告警列表</td><td>LOGISTICS</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="api-panel" id="api-query">
+              <table class="api-table">
+                <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>权限</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/public/trace/{batchId}</td><td>消费者公开溯源查询</td><td>公开</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/public/verify/{batchId}</td><td>验证链上哈希</td><td>公开</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/qrcode/{batchId}</td><td>生成溯源二维码</td><td>RETAILER</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/audit/logs</td><td>审计日志查询</td><td>REGULATOR</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- API 详细示例 -->
+        <div class="api-examples">
+          <h3>核心接口详细示例</h3>
+          <div class="api-example-tabs">
+            <button class="api-ex-tab active" data-example="create-batch">创建批次</button>
+            <button class="api-ex-tab" data-example="add-trace">添加溯源</button>
+            <button class="api-ex-tab" data-example="query-trace">溯源查询</button>
+            <button class="api-ex-tab" data-example="iot-data">IoT 数据</button>
+          </div>
+          <div class="api-example-panels">
+            <div class="api-example-panel active" id="example-create-batch">
+              <div class="api-example-grid">
+                <div class="api-req">
+                  <h4>请求 POST /api/v1/batches</h4>
+                  <pre><code>// Headers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+Content-Type: application/json
+
+// Body
+{
+  "productName": "有机番茄",
+  "category": "蔬菜",
+  "quantity": 500,
+  "unit": "kg",
+  "plantedAt": "2026-03-15",
+  "metadata": {
+    "farmBlock": "SD-042",
+    "variety": "普罗旺斯",
+    "organicCert": "ORG-2026-SD-0088",
+    "fertilizer": ["有机肥", "生物农药"]
+  },
+  "images": ["base64...或先上传获取 cid"]
+}</code></pre>
+                </div>
+                <div class="api-res">
+                  <h4>响应 201 Created</h4>
+                  <pre><code>{
+  "code": 0,
+  "message": "批次创建成功，上链交易已提交",
+  "data": {
+    "batchId": "GC-TOM-2026-SD-00421",
+    "status": "CREATED",
+    "chainTx": {
+      "txId": "a3f8c2e1...7b4d",
+      "status": "SUBMITTED",
+      "chaincode": "batch",
+      "function": "CreateBatch"
+    },
+    "dbRecord": {
+      "id": 421,
+      "chainStatus": "PENDING"
+    },
+    "metadataCid": "QmX7yK9p...3mNw"
+  }
+}</code></pre>
+                </div>
+              </div>
+              <div class="api-flow-note">
+                <strong>后端处理流程：</strong>
+                ① 校验 JWT 权限 → ② 上传 metadata/images 到 IPFS → ③ 写入 PostgreSQL（status=PENDING）→ ④ 调用 Fabric SDK 提交 CreateBatch 交易 → ⑤ 记录 blockchain_transactions → ⑥ 监听区块事件更新 chain_status=CONFIRMED → ⑦ 清除 Redis 缓存
+              </div>
+            </div>
+            <div class="api-example-panel" id="example-add-trace">
+              <div class="api-example-grid">
+                <div class="api-req">
+                  <h4>请求 POST /api/v1/traces</h4>
+                  <pre><code>{
+  "batchId": "GC-TOM-2026-SD-00421",
+  "stage": "HARVESTING",
+  "action": "采收 500kg 有机番茄",
+  "location": "山东寿光绿野合作社",
+  "latitude": 36.8573,
+  "longitude": 118.7905,
+  "operatedAt": "2026-06-01T06:00:00+08:00",
+  "extraData": {
+    "harvestTeam": "采收一队",
+    "quickTest": "农残检测 PASS",
+    "weather": "晴 25°C"
+  }
+}</code></pre>
+                </div>
+                <div class="api-res">
+                  <h4>响应 201 Created</h4>
+                  <pre><code>{
+  "code": 0,
+  "data": {
+    "recordId": "TR-2026-00421-002",
+    "batchId": "GC-TOM-2026-SD-00421",
+    "stage": "HARVESTING",
+    "dataHash": "QmR3t8k...7mNw",
+    "chainTx": {
+      "txId": "b7e2f1a9...3c8d",
+      "status": "SUBMITTED"
+    },
+    "batchStatus": "HARVESTED"
+  }
+}</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="api-example-panel" id="example-query-trace">
+              <div class="api-example-grid">
+                <div class="api-req">
+                  <h4>请求 GET /api/v1/public/trace/GC-TOM-2026-SD-00421</h4>
+                  <pre><code>// 无需认证，消费者公开接口
+// 查询路径：
+// 1. 检查 Redis 缓存 trace:query:{batchId}
+// 2. 缓存未命中 → 查询 PostgreSQL 聚合
+// 3. 调用 Fabric 验证链上哈希
+// 4. 从 IPFS 获取图片/报告
+// 5. 写入 Redis 缓存（TTL 5min）
+// 6. 返回完整溯源时间线</code></pre>
+                </div>
+                <div class="api-res">
+                  <h4>响应 200 OK</h4>
+                  <pre><code>{
+  "code": 0,
+  "data": {
+    "batchId": "GC-TOM-2026-SD-00421",
+    "productName": "有机番茄",
+    "verified": true,
+    "chainVerified": true,
+    "timeline": [
+      {
+        "stage": "PLANTING",
+        "org": "寿光绿野合作社",
+        "action": "有机番茄种植登记",
+        "time": "2026-03-15T08:30:00+08:00",
+        "dataHash": "Qm1a2b...",
+        "hashMatch": true
+      }
+      // ... 6 个环节
+    ],
+    "qualityReport": {
+      "result": "PASS",
+      "reportHash": "QmK9p...",
+      "verified": true
+    }
+  }
+}</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="api-example-panel" id="example-iot-data">
+              <div class="api-example-grid">
+                <div class="api-req">
+                  <h4>MQTT 消息 → 后端处理</h4>
+                  <pre><code>// Topic: iot/greenchain/device/DEV-TEMP-001/data
+{
+  "deviceId": "DEV-TEMP-001",
+  "batchId": "GC-TOM-2026-SD-00421",
+  "timestamp": "2026-06-04T10:30:00Z",
+  "readings": {
+    "temperature": 4.2,
+    "humidity": 65.0
+  },
+  "location": {
+    "lat": 36.6512,
+    "lng": 117.1201
+  }
+}</code></pre>
+                </div>
+                <div class="api-res">
+                  <h4>后端处理流程</h4>
+                  <pre><code>1. EMQX 接收 MQTT 消息
+2. 写入 TimescaleDB iot_sensor_data
+3. 更新 Redis iot:latest:{deviceId}
+4. IF temperature > 8.0:
+     a. 标记 is_alert = true
+     b. 调用 Fabric SubmitIoTData 上链
+     c. 发送告警通知（短信/APP推送）
+5. 返回 ACK</code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 错误码 -->
+        <div class="error-codes">
+          <h3>统一错误码</h3>
+          <div class="tech-table-wrapper">
+            <table class="tech-table">
+              <thead><tr><th>错误码</th><th>HTTP</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td>0</td><td>200/201</td><td>成功</td></tr>
+                <tr><td>10001</td><td>401</td><td>未登录或 Token 过期</td></tr>
+                <tr><td>10003</td><td>403</td><td>权限不足（组织/角色不匹配）</td></tr>
+                <tr><td>20001</td><td>404</td><td>批次不存在</td></tr>
+                <tr><td>20002</td><td>409</td><td>批次状态不允许此操作</td></tr>
+                <tr><td>30001</td><td>500</td><td>区块链交易提交失败</td></tr>
+                <tr><td>30002</td><td>504</td><td>区块链交易确认超时（>30s）</td></tr>
+                <tr><td>40001</td><td>400</td><td>IPFS 上传失败</td></tr>
+                <tr><td>50001</td><td>429</td><td>API 请求频率超限</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 数据流程 -->
+    <section class="section" id="dataflow">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">07 · 数据流程</span>
+          <h2>端到端数据流转详解</h2>
+          <p>从用户操作到链上确认，完整数据流经 8 个组件</p>
+        </div>
+
+        <!-- 数据流总览 -->
+        <div class="dataflow-pipeline">
+          <h3>数据流转管道</h3>
+          <div class="pipeline-visual">
+            <div class="pipeline-node">📱 客户端</div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-node">🌐 API Gateway</div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-node">⚙️ 业务服务</div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-node">🐘 PostgreSQL</div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-node">📨 消息队列</div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-node">⛓️ Fabric</div>
+            <div class="pipeline-arrow">→</div>
+            <div class="pipeline-node">✅ 事件回调</div>
+          </div>
+        </div>
+
+        <!-- 时序图：创建批次 -->
+        <div class="sequence-diagram">
+          <h3>时序图：创建批次完整流程</h3>
+          <div class="sequence-visual" id="seqCreateBatch">
+            <div class="seq-participants">
+              <span>农户APP</span><span>API网关</span><span>批次服务</span><span>PostgreSQL</span><span>IPFS</span><span>Fabric</span><span>Redis</span>
+            </div>
+            <div class="seq-messages">
+              <div class="seq-msg"><span class="seq-from">农户APP</span><span class="seq-arrow">── POST /batches ──→</span><span class="seq-to">API网关</span></div>
+              <div class="seq-msg"><span class="seq-from">API网关</span><span class="seq-arrow">── JWT 验证 + 路由 ──→</span><span class="seq-to">批次服务</span></div>
+              <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── 上传 metadata ──→</span><span class="seq-to">IPFS</span></div>
+              <div class="seq-msg return"><span class="seq-from">IPFS</span><span class="seq-arrow">←── 返回 CID ──</span><span class="seq-to">批次服务</span></div>
+              <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── INSERT batch (PENDING) ──→</span><span class="seq-to">PostgreSQL</span></div>
+              <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── CreateBatch(args) ──→</span><span class="seq-to">Fabric</span></div>
+              <div class="seq-msg"><span class="seq-from">Fabric</span><span class="seq-arrow">←── TxID + SUBMITTED ──</span><span class="seq-to">批次服务</span></div>
+              <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── INSERT blockchain_tx ──→</span><span class="seq-to">PostgreSQL</span></div>
+              <div class="seq-msg return"><span class="seq-from">批次服务</span><span class="seq-arrow">←── 201 Created ──</span><span class="seq-to">农户APP</span></div>
+              <div class="seq-msg async"><span class="seq-from">Fabric</span><span class="seq-arrow">·· BlockCommitted 事件 ··→</span><span class="seq-to">批次服务</span></div>
+              <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── UPDATE chain_status=CONFIRMED ──→</span><span class="seq-to">PostgreSQL</span></div>
+              <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── DEL trace:query:* ──→</span><span class="seq-to">Redis</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 时序图：消费者查询 -->
+        <div class="sequence-diagram">
+          <h3>时序图：消费者溯源查询流程</h3>
+          <div class="sequence-visual" id="seqQuery">
+            <div class="seq-participants">
+              <span>消费者</span><span>API网关</span><span>查询服务</span><span>Redis</span><span>PostgreSQL</span><span>Fabric</span><span>IPFS</span>
+            </div>
+            <div class="seq-messages">
+              <div class="seq-msg"><span class="seq-from">消费者</span><span class="seq-arrow">── GET /public/trace/{id} ──→</span><span class="seq-to">API网关</span></div>
+              <div class="seq-msg"><span class="seq-from">查询服务</span><span class="seq-arrow">── GET trace:query:{id} ──→</span><span class="seq-to">Redis</span></div>
+              <div class="seq-msg alt"><span class="seq-from">Redis</span><span class="seq-arrow">←── 缓存未命中 (nil) ──</span><span class="seq-to">查询服务</span></div>
+              <div class="seq-msg"><span class="seq-from">查询服务</span><span class="seq-arrow">── JOIN 批次+溯源+质检 ──→</span><span class="seq-to">PostgreSQL</span></div>
+              <div class="seq-msg"><span class="seq-from">查询服务</span><span class="seq-arrow">── GetTraceHistory ──→</span><span class="seq-to">Fabric</span></div>
+              <div class="seq-msg"><span class="seq-from">查询服务</span><span class="seq-arrow">── 比对链上/链下哈希 ──→</span><span class="seq-to">查询服务</span></div>
+              <div class="seq-msg"><span class="seq-from">查询服务</span><span class="seq-arrow">── 获取图片/报告 ──→</span><span class="seq-to">IPFS</span></div>
+              <div class="seq-msg"><span class="seq-from">查询服务</span><span class="seq-arrow">── SET trace:query:{id} EX 300 ──→</span><span class="seq-to">Redis</span></div>
+              <div class="seq-msg return"><span class="seq-from">查询服务</span><span class="seq-arrow">←── 200 完整溯源 JSON ──</span><span class="seq-to">消费者</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 消息队列 -->
+        <div class="mq-section">
+          <h3>消息队列（RabbitMQ）事件驱动</h3>
+          <div class="mq-grid">
+            <div class="mq-card">
+              <h4>📤 生产者事件</h4>
+              <ul>
+                <li><code>batch.created</code> — 批次创建后触发</li>
+                <li><code>trace.added</code> — 溯源记录添加后</li>
+                <li><code>chain.tx.committed</code> — 链上交易确认后</li>
+                <li><code>iot.alert</code> — IoT 温度异常告警</li>
+                <li><code>recall.initiated</code> — 召回发起后</li>
+              </ul>
+            </div>
+            <div class="mq-card">
+              <h4>📥 消费者处理</h4>
+              <ul>
+                <li><code>notification-service</code> — 发送 APP/短信通知</li>
+                <li><code>chain-sync-service</code> — 同步链上状态到 DB</li>
+                <li><code>audit-service</code> — 写入审计日志</li>
+                <li><code>analytics-service</code> — 更新统计报表</li>
+                <li><code>alert-service</code> — 处理 IoT 异常告警</li>
+              </ul>
+            </div>
+            <div class="mq-card">
+              <h4>⚙️ 队列配置</h4>
+              <ul>
+                <li>Exchange: <code>greenchain.events</code> (topic)</li>
+                <li>死信队列: <code>greenchain.dlq</code></li>
+                <li>重试策略: 3 次指数退避</li>
+                <li>消息持久化: durable=true</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 业务流程 -->
     <section class="section" id="workflow">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">05 · 业务流程</span>
+          <span class="section-tag">08 · 业务流程</span>
           <h2>有机番茄全链路溯源流程</h2>
           <p>从种植到消费的 6 大环节，12 次链上操作</p>
         </div>
@@ -683,7 +1647,7 @@
     <section class="section section-alt" id="smart-contract">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">06 · 智能合约</span>
+          <span class="section-tag">09 · 智能合约</span>
           <h2>核心智能合约代码</h2>
           <p>以 Go Chaincode 展示关键合约逻辑（Hyperledger Fabric）</p>
         </div>
@@ -1127,11 +2091,134 @@ func (c *AccessContract) InitiateRecall(
       </div>
     </section>
 
+    <!-- 部署运维 -->
+    <section class="section section-alt" id="deployment">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">10 · 部署运维</span>
+          <h2>部署架构与运维方案</h2>
+          <p>Docker Compose 开发环境 + Kubernetes 生产部署 + CI/CD 流水线</p>
+        </div>
+
+        <div class="deploy-overview">
+          <div class="deploy-env">
+            <h3>🐳 Docker Compose 服务清单</h3>
+            <div class="tech-table-wrapper">
+              <table class="tech-table">
+                <thead><tr><th>服务</th><th>镜像</th><th>端口</th><th>说明</th></tr></thead>
+                <tbody>
+                  <tr><td>api-gateway</td><td>kong:3.4</td><td>8000, 8443</td><td>API 网关 + JWT 鉴权</td></tr>
+                  <tr><td>batch-service</td><td>greenchain/batch:latest</td><td>8081</td><td>批次管理微服务</td></tr>
+                  <tr><td>trace-service</td><td>greenchain/trace:latest</td><td>8082</td><td>溯源记录微服务</td></tr>
+                  <tr><td>query-service</td><td>greenchain/query:latest</td><td>8083</td><td>溯源查询服务</td></tr>
+                  <tr><td>iot-service</td><td>greenchain/iot:latest</td><td>8084</td><td>IoT 数据接入</td></tr>
+                  <tr><td>postgresql</td><td>postgres:15-alpine</td><td>5432</td><td>核心业务数据库</td></tr>
+                  <tr><td>timescaledb</td><td>timescale/timescaledb:latest-pg15</td><td>5433</td><td>IoT 时序数据库</td></tr>
+                  <tr><td>redis</td><td>redis:7-alpine</td><td>6379</td><td>缓存 + 分布式锁</td></tr>
+                  <tr><td>rabbitmq</td><td>rabbitmq:3-management</td><td>5672, 15672</td><td>消息队列</td></tr>
+                  <tr><td>emqx</td><td>emqx:5</td><td>1883, 18083</td><td>MQTT Broker</td></tr>
+                  <tr><td>ipfs</td><td>ipfs/kubo:latest</td><td>5001, 8080</td><td>分布式文件存储</td></tr>
+                  <tr><td>minio</td><td>minio/minio</td><td>9000, 9001</td><td>对象存储（备份）</td></tr>
+                  <tr><td>fabric-peer</td><td>hyperledger/fabric-peer:2.5</td><td>7051</td><td>区块链 Peer 节点 ×4</td></tr>
+                  <tr><td>fabric-orderer</td><td>hyperledger/fabric-orderer:2.5</td><td>7050</td><td>排序节点</td></tr>
+                  <tr><td>prometheus</td><td>prom/prometheus</td><td>9090</td><td>监控指标采集</td></tr>
+                  <tr><td>grafana</td><td>grafana/grafana</td><td>3000</td><td>监控可视化面板</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="deploy-k8s">
+          <h3>☸️ Kubernetes 生产部署架构</h3>
+          <div class="k8s-visual">
+            <div class="k8s-ns">
+              <div class="k8s-ns-header">Namespace: greenchain-prod</div>
+              <div class="k8s-row">
+                <div class="k8s-group">
+                  <span class="k8s-label">Ingress</span>
+                  <div class="k8s-pods"><span>Nginx Ingress</span><span>SSL Termination</span></div>
+                </div>
+              </div>
+              <div class="k8s-row">
+                <div class="k8s-group">
+                  <span class="k8s-label">微服务 (HPA 2-8 副本)</span>
+                  <div class="k8s-pods"><span>batch-svc</span><span>trace-svc</span><span>query-svc</span><span>iot-svc</span></div>
+                </div>
+              </div>
+              <div class="k8s-row">
+                <div class="k8s-group">
+                  <span class="k8s-label">数据层 (StatefulSet)</span>
+                  <div class="k8s-pods"><span>PostgreSQL ×1</span><span>TimescaleDB ×1</span><span>Redis Cluster ×3</span></div>
+                </div>
+              </div>
+              <div class="k8s-row">
+                <div class="k8s-group">
+                  <span class="k8s-label">区块链 (独立节点)</span>
+                  <div class="k8s-pods"><span>Peer ×4</span><span>Orderer ×3</span><span>CA ×1</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cicd-pipeline">
+          <h3>🔄 CI/CD 流水线</h3>
+          <div class="pipeline-steps">
+            <div class="cicd-step"><span>1</span><strong>Git Push</strong><p>代码推送到 main 分支</p></div>
+            <div class="cicd-arrow">→</div>
+            <div class="cicd-step"><span>2</span><strong>CI 构建</strong><p>Go 编译 + 单元测试 + Lint</p></div>
+            <div class="cicd-arrow">→</div>
+            <div class="cicd-step"><span>3</span><strong>合约测试</strong><p>Chaincode 集成测试</p></div>
+            <div class="cicd-arrow">→</div>
+            <div class="cicd-step"><span>4</span><strong>Docker 构建</strong><p>多阶段构建镜像</p></div>
+            <div class="cicd-arrow">→</div>
+            <div class="cicd-step"><span>5</span><strong>推送镜像</strong><p>Harbor 私有仓库</p></div>
+            <div class="cicd-arrow">→</div>
+            <div class="cicd-step"><span>6</span><strong>K8s 部署</strong><p>Helm Chart 滚动更新</p></div>
+          </div>
+        </div>
+
+        <div class="ops-section">
+          <h3>🛡️ 运维保障</h3>
+          <div class="ops-grid">
+            <div class="ops-card">
+              <h4>数据库备份</h4>
+              <ul>
+                <li>PostgreSQL：每日全量 + WAL 增量备份</li>
+                <li>TimescaleDB：连续归档至 MinIO</li>
+                <li>Redis：RDB 每小时 + AOF 实时</li>
+                <li>保留策略：全量 30 天，增量 7 天</li>
+              </ul>
+            </div>
+            <div class="ops-card">
+              <h4>监控告警</h4>
+              <ul>
+                <li>API 响应时间 P99 &lt; 500ms</li>
+                <li>区块链出块延迟 &lt; 3s 告警</li>
+                <li>数据库连接池使用率 &gt; 80% 告警</li>
+                <li>IoT 设备离线 &gt; 5min 告警</li>
+              </ul>
+            </div>
+            <div class="ops-card">
+              <h4>安全策略</h4>
+              <ul>
+                <li>TLS 1.3 全链路加密</li>
+                <li>Fabric MSP 证书定期轮换</li>
+                <li>数据库敏感字段 AES 加密</li>
+                <li>API 网关 WAF + DDoS 防护</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 交互演示 -->
     <section class="section" id="demo">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">07 · 交互演示</span>
+          <span class="section-tag">11 · 交互演示</span>
           <h2>区块链溯源交互模拟器</h2>
           <p>亲手体验农产品从种植到上架的链上操作过程</p>
         </div>
@@ -1180,29 +2267,40 @@ func (c *AccessContract) InitiateRecall(
           </div>
 
           <div class="demo-visualization">
-            <h3>区块链账本实时视图</h3>
-            <div class="blockchain-ledger" id="blockchainLedger">
-              <div class="genesis-block block">
-                <div class="block-header">
-                  <span class="block-num">#0</span>
-                  <span class="block-label">创世区块</span>
+            <h3>区块链账本 + 数据库双写视图</h3>
+            <div class="demo-dual-view">
+              <div class="demo-view-panel">
+                <h4>⛓️ 区块链账本</h4>
+                <div class="blockchain-ledger" id="blockchainLedger">
+                  <div class="genesis-block block">
+                    <div class="block-header">
+                      <span class="block-num">#0</span>
+                      <span class="block-label">创世区块</span>
+                    </div>
+                    <div class="block-body">
+                      <div class="block-field">
+                        <span class="field-label">Hash</span>
+                        <span class="field-value">0x0000...genesis</span>
+                      </div>
+                      <div class="block-field">
+                        <span class="field-label">Prev</span>
+                        <span class="field-value">null</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="block-body">
-                  <div class="block-field">
-                    <span class="field-label">Hash</span>
-                    <span class="field-value">0x0000...genesis</span>
-                  </div>
-                  <div class="block-field">
-                    <span class="field-label">Prev</span>
-                    <span class="field-value">null</span>
-                  </div>
+              </div>
+              <div class="demo-view-panel">
+                <h4>🐘 PostgreSQL 操作日志</h4>
+                <div class="db-log" id="dbLog">
+                  <div class="db-log-empty">等待操作...</div>
                 </div>
               </div>
             </div>
 
             <div class="demo-trace-timeline" id="demoTraceTimeline">
               <h4>溯源时间线</h4>
-              <div class="trace-empty">点击左侧按钮开始模拟上链操作</div>
+              <div class="trace-empty">点击左侧按钮开始模拟完整数据流（IPFS → DB → 区块链 → 缓存）</div>
             </div>
           </div>
         </div>
@@ -1225,7 +2323,7 @@ func (c *AccessContract) InitiateRecall(
     <section class="section section-alt" id="roi">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">08 · 效益分析</span>
+          <span class="section-tag">12 · 效益分析</span>
           <h2>实施效益与投资回报</h2>
           <p>基于某省 50 家农业合作社试点数据的分析</p>
         </div>
@@ -1352,7 +2450,7 @@ func (c *AccessContract) InitiateRecall(
     <section class="section" id="faq">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">09 · 常见问题</span>
+          <span class="section-tag">13 · 常见问题</span>
           <h2>常见问题解答</h2>
         </div>
 
@@ -1397,9 +2495,10 @@ func (c *AccessContract) InitiateRecall(
         <div class="footer-links">
           <h4>案例章节</h4>
           <a href="#overview">案例概述</a>
-          <a href="#architecture">技术架构</a>
-          <a href="#demo">交互演示</a>
-          <a href="#smart-contract">智能合约</a>
+          <a href="#database">数据库设计</a>
+          <a href="#api">API 接口</a>
+          <a href="#dataflow">数据流程</a>
+          <a href="#deployment">部署运维</a>
         </div>
         <div class="footer-links">
           <h4>技术参考</h4>
