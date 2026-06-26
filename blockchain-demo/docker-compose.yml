@@ -1,0 +1,12 @@
+services:
+  evidence-chain:
+    build: .
+    container_name: evidence-blockchain-demo
+    ports:
+      - "8000:8000"
+    volumes:
+      - chain_data:/app/backend/data
+    restart: unless-stopped
+
+volumes:
+  chain_data:
