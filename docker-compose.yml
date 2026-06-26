@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: southnotary-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-evidence_db}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  uploader:
+    build: .
+    container_name: southnotary-uploader
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: mysql
+    volumes:
+      - ./logs:/app/logs
+      - ${VIDEO_STORAGE_PATH:-/data/videos}:/data/videos:ro
+    # Uncomment if OOS SDK is placed in ./sdk/
+    # volumes:
+    #   - ./sdk:/tmp/sdk:ro
+
+volumes:
+  mysql_data:
