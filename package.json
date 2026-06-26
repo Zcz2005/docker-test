@@ -1,0 +1,14 @@
+{
+  "name": "greenchain-traceability",
+  "version": "1.0.0",
+  "description": "基于区块链的农产品全链路溯源平台 - 详细使用案例网站",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

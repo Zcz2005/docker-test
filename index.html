@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="绿链溯源 GreenChain - 基于区块链的农产品全链路溯源平台详细使用案例" />
+  <title>绿链溯源 GreenChain | 区块链农产品溯源平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- 导航栏 -->
+  <header class="header" id="header">
+    <nav class="nav container">
+      <a href="#hero" class="nav-logo">
+        <span class="logo-icon">⛓</span>
+        <span>绿链溯源 <small>GreenChain</small></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="打开菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="#overview">案例概述</a></li>
+        <li><a href="#problem">痛点分析</a></li>
+        <li><a href="#solution">解决方案</a></li>
+        <li><a href="#architecture">技术架构</a></li>
+        <li><a href="#workflow">业务流程</a></li>
+        <li><a href="#smart-contract">智能合约</a></li>
+        <li><a href="#demo">交互演示</a></li>
+        <li><a href="#roi">效益分析</a></li>
+        <li><a href="#faq">常见问题</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero" id="hero">
+      <div class="hero-bg"></div>
+      <div class="container hero-content">
+        <div class="hero-badge">区块链 · 供应链 · 食品安全</div>
+        <h1>基于区块链的<br /><span class="gradient-text">农产品全链路溯源平台</span></h1>
+        <p class="hero-desc">
+          从田间到餐桌，每一颗番茄、每一袋大米都有不可篡改的"数字身份证"。
+          本案例以<strong>「绿链溯源 GreenChain」</strong>为例，详细展示区块链如何在农产品供应链中实现透明、可信、高效的全链路追溯。
+        </p>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-num">6</span>
+            <span class="stat-label">供应链环节</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">12+</span>
+            <span class="stat-label">参与角色</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">&lt;3s</span>
+            <span class="stat-label">溯源查询响应</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">100%</span>
+            <span class="stat-label">数据不可篡改</span>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a href="#demo" class="btn btn-primary">体验交互演示</a>
+          <a href="#overview" class="btn btn-outline">了解案例详情</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="blockchain-visual" id="heroChain">
+          <!-- JS 动态生成 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 案例概述 -->
+    <section class="section" id="overview">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">01 · 案例概述</span>
+          <h2>什么是绿链溯源？</h2>
+          <p>一个基于联盟链技术构建的农产品供应链数字化溯源平台</p>
+        </div>
+
+        <div class="overview-grid">
+          <div class="overview-card main-card">
+            <h3>项目背景</h3>
+            <p>
+              中国是全球最大的农产品生产与消费国。然而，食品安全事件频发、假冒伪劣产品泛滥、
+              供应链信息孤岛严重，导致消费者难以验证产品真伪，企业品牌信任度受损，
+              监管部门追溯成本高昂。
+            </p>
+            <p>
+              <strong>绿链溯源（GreenChain）</strong>是一个面向农产品行业的联盟链溯源平台，
+              由农业合作社、加工商、物流公司、零售商、质检机构和监管部门共同参与治理。
+              平台将种植、采收、加工、检测、物流、零售等全链路数据上链存证，
+              消费者扫码即可查看完整溯源信息。
+            </p>
+          </div>
+
+          <div class="overview-card">
+            <div class="card-icon">🎯</div>
+            <h3>核心目标</h3>
+            <ul>
+              <li>实现农产品从产地到餐桌的全链路可追溯</li>
+              <li>确保溯源数据不可篡改、可审计</li>
+              <li>提升消费者信任与品牌溢价能力</li>
+              <li>降低监管部门的追溯成本</li>
+              <li>支持快速召回与责任认定</li>
+            </ul>
+          </div>
+
+          <div class="overview-card">
+            <div class="card-icon">🔗</div>
+            <h3>为什么选择区块链？</h3>
+            <ul>
+              <li><strong>不可篡改性</strong> — 历史记录一旦写入链上，任何参与方均无法单方面修改</li>
+              <li><strong>多方共识</strong> — 联盟链各节点共同验证交易，避免单方造假</li>
+              <li><strong>透明可审计</strong> — 授权方可随时查验完整历史记录</li>
+              <li><strong>智能合约</strong> — 自动执行业务规则，减少人为干预</li>
+              <li><strong>跨组织协作</strong> — 打破信息孤岛，建立信任机制</li>
+            </ul>
+          </div>
+
+          <div class="overview-card">
+            <div class="card-icon">📦</div>
+            <h3>典型案例：有机番茄</h3>
+            <p>以山东寿光有机番茄为例，完整演示溯源流程：</p>
+            <div class="product-timeline-mini">
+              <span>🌱 种植</span>
+              <span class="arrow">→</span>
+              <span>🧺 采收</span>
+              <span class="arrow">→</span>
+              <span>🏭 加工</span>
+              <span class="arrow">→</span>
+              <span>🔬 质检</span>
+              <span class="arrow">→</span>
+              <span>🚚 物流</span>
+              <span class="arrow">→</span>
+              <span>🏪 零售</span>
+            </div>
+            <p class="product-id">产品批次号：<code>GC-TOM-2026-SD-00421</code></p>
+          </div>
+        </div>
+
+        <!-- 参与角色 -->
+        <div class="stakeholders">
+          <h3>平台参与角色</h3>
+          <div class="stakeholder-grid">
+            <div class="stakeholder">
+              <span class="role-icon">👨‍🌾</span>
+              <h4>农户 / 合作社</h4>
+              <p>录入种植信息、施肥用药记录、采收数据</p>
+            </div>
+            <div class="stakeholder">
+              <span class="role-icon">🏭</span>
+              <h4>加工厂</h4>
+              <p>记录加工批次、工艺参数、包装信息</p>
+            </div>
+            <div class="stakeholder">
+              <span class="role-icon">🔬</span>
+              <h4>质检机构</h4>
+              <p>上传检测报告、认证信息、合格证明</p>
+            </div>
+            <div class="stakeholder">
+              <span class="role-icon">🚛</span>
+              <h4>物流公司</h4>
+              <p>记录运输轨迹、温湿度、交接节点</p>
+            </div>
+            <div class="stakeholder">
+              <span class="role-icon">🏪</span>
+              <h4>零售商</h4>
+              <p>确认收货、上架销售、生成消费二维码</p>
+            </div>
+            <div class="stakeholder">
+              <span class="role-icon">🏛️</span>
+              <h4>监管部门</h4>
+              <p>审计数据、处理投诉、执行召回</p>
+            </div>
+            <div class="stakeholder">
+              <span class="role-icon">👤</span>
+              <h4>消费者</h4>
+              <p>扫码查询溯源、验证真伪、评价反馈</p>
+            </div>
+            <div class="stakeholder">
+              <span class="role-icon">⚙️</span>
+              <h4>平台运营方</h4>
+              <p>节点管理、权限配置、系统运维</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 痛点分析 -->
+    <section class="section section-alt" id="problem">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">02 · 痛点分析</span>
+          <h2>传统溯源体系面临的核心挑战</h2>
+          <p>中心化数据库方案难以解决多方协作中的信任问题</p>
+        </div>
+
+        <div class="problem-comparison">
+          <div class="comparison-col traditional">
+            <h3>❌ 传统中心化溯源</h3>
+            <ul class="problem-list">
+              <li>
+                <strong>数据可被单方篡改</strong>
+                <p>企业自有数据库，内部人员可修改历史记录，消费者无法验证真实性</p>
+              </li>
+              <li>
+                <strong>信息孤岛严重</strong>
+                <p>种植、加工、物流、零售各环节系统互不联通，数据碎片化</p>
+              </li>
+              <li>
+                <strong>追溯成本高昂</strong>
+                <p>出现食品安全事件后，跨组织协调追溯平均需要 7-15 天</p>
+              </li>
+              <li>
+                <strong>防伪能力薄弱</strong>
+                <p>二维码可被复制，溯源页面可被伪造，消费者难以辨别</p>
+              </li>
+              <li>
+                <strong>责任认定困难</strong>
+                <p>缺乏可信的时间戳和多方见证，纠纷中难以确定责任环节</p>
+              </li>
+              <li>
+                <strong>监管审计不便</strong>
+                <p>监管部门需逐一调取各方数据，效率低且可能被选择性提供</p>
+              </li>
+            </ul>
+          </div>
+          <div class="comparison-col blockchain">
+            <h3>✅ 区块链溯源方案</h3>
+            <ul class="solution-list">
+              <li>
+                <strong>链上数据不可篡改</strong>
+                <p>联盟链共识机制保证写入后无法修改，哈希链式结构可检测任何篡改</p>
+              </li>
+              <li>
+                <strong>多方共建共享</strong>
+                <p>各参与方作为链上节点，数据实时同步，打破信息孤岛</p>
+              </li>
+              <li>
+                <strong>秒级精准追溯</strong>
+                <p>输入批次号即可在 3 秒内定位全链路信息，召回效率提升 90%+</p>
+              </li>
+              <li>
+                <strong>密码学防伪验证</strong>
+                <p>二维码关联链上哈希，扫码可验证数据完整性与来源真实性</p>
+              </li>
+              <li>
+                <strong>全程时间戳存证</strong>
+                <p>每个环节上链时间由区块链网络共同见证，法律效力更强</p>
+              </li>
+              <li>
+                <strong>监管实时可见</strong>
+                <p>监管节点拥有只读权限，可随时审计任意批次的全链路数据</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 真实事件案例 -->
+        <div class="case-event">
+          <h3>📰 真实事件：为什么需要区块链溯源？</h3>
+          <div class="event-cards">
+            <div class="event-card">
+              <span class="event-year">2018</span>
+              <h4>某品牌疫苗追溯事件</h4>
+              <p>疫苗冷链数据被篡改，传统数据库无法证明数据真实性，引发公众信任危机。若有区块链存证，任何温度异常修改都会被立即发现。</p>
+            </div>
+            <div class="event-card">
+              <span class="event-year">2020</span>
+              <h4>进口冷链食品疫情追溯</h4>
+              <p>新冠疫情中，进口食品溯源涉及多国多方，传统系统协调困难。区块链可实现跨境数据互信，快速定位问题批次。</p>
+            </div>
+            <div class="event-card">
+              <span class="event-year">2023</span>
+              <h4>有机蔬菜造假曝光</h4>
+              <p>某电商平台"有机"蔬菜被曝实为普通蔬菜贴标。区块链可验证有机认证上链记录，消费者可查验认证机构签名。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 解决方案 -->
+    <section class="section" id="solution">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">03 · 解决方案</span>
+          <h2>绿链溯源平台核心功能</h2>
+          <p>六大功能模块覆盖溯源全生命周期</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-num">01</div>
+            <h3>数字身份管理</h3>
+            <p>为每个参与方（农户、工厂、物流商等）分配基于非对称加密的链上数字身份（DID），所有上链操作均需私钥签名，确保操作可追溯至具体主体。</p>
+            <div class="feature-detail">
+              <span>技术：ECDSA 签名 · X.509 证书 · DID</span>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">02</div>
+            <h3>批次生命周期管理</h3>
+            <p>从产品创建到消费完结，每个批次拥有唯一链上 ID。支持批次拆分（一大批分成多小批）和合并（多批合成一批），父子关系在链上完整记录。</p>
+            <div class="feature-detail">
+              <span>支持：批次拆分 · 批次合并 · 状态机流转</span>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">03</div>
+            <h3>物联网数据上链</h3>
+            <p>对接温湿度传感器、GPS 定位、视频监控等 IoT 设备，关键环境数据自动采集并上链。智能合约设定阈值，温度超标自动触发预警。</p>
+            <div class="feature-detail">
+              <span>设备：传感器 · GPS · RFID · 电子秤</span>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">04</div>
+            <h3>质检报告存证</h3>
+            <p>第三方检测机构将报告哈希上链，原始报告存储在 IPFS 分布式存储中。消费者可验证报告未被篡改，认证机构数字签名确保权威性。</p>
+            <div class="feature-detail">
+              <span>存储：IPFS · 链上哈希 · 数字签名</span>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">05</div>
+            <h3>消费者溯源查询</h3>
+            <p>扫描产品包装上的二维码，即可查看从种植到零售的完整时间线。支持验证链上数据哈希，确认信息真实性。提供多媒体展示（图片、视频、地图）。</p>
+            <div class="feature-detail">
+              <span>渠道：微信小程序 · H5 · APP</span>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-num">06</div>
+            <h3>监管审计与召回</h3>
+            <p>监管部门拥有链上只读审计权限，可实时监控、生成合规报告。发现问题批次后，一键发起召回，系统自动通知所有下游节点。</p>
+            <div class="feature-detail">
+              <span>功能：实时审计 · 一键召回 · 合规报告</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 技术架构 -->
+    <section class="section section-alt" id="architecture">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">04 · 技术架构</span>
+          <h2>系统技术架构设计</h2>
+          <p>分层架构确保可扩展性、安全性与高性能</p>
+        </div>
+
+        <!-- 架构图 -->
+        <div class="architecture-diagram">
+          <div class="arch-layer" data-layer="应用层">
+            <div class="layer-label">应用层</div>
+            <div class="layer-items">
+              <span>农户端 APP</span>
+              <span>加工管理后台</span>
+              <span>物流追踪系统</span>
+              <span>零售 POS</span>
+              <span>消费者小程序</span>
+              <span>监管大屏</span>
+            </div>
+          </div>
+          <div class="arch-connector">↕ API Gateway (REST / gRPC)</div>
+          <div class="arch-layer" data-layer="服务层">
+            <div class="layer-label">服务层</div>
+            <div class="layer-items">
+              <span>身份认证服务</span>
+              <span>批次管理服务</span>
+              <span>溯源查询服务</span>
+              <span>IoT 数据接入</span>
+              <span>消息通知服务</span>
+              <span>报表分析服务</span>
+            </div>
+          </div>
+          <div class="arch-connector">↕ 区块链 SDK</div>
+          <div class="arch-layer" data-layer="区块链层">
+            <div class="layer-label">区块链层</div>
+            <div class="layer-items highlight">
+              <span>智能合约 (Solidity)</span>
+              <span>联盟链共识 (PBFT)</span>
+              <span>节点：农户协会</span>
+              <span>节点：加工企业</span>
+              <span>节点：物流公司</span>
+              <span>节点：监管部门</span>
+            </div>
+          </div>
+          <div class="arch-connector">↕ 链下存储</div>
+          <div class="arch-layer" data-layer="数据层">
+            <div class="layer-label">数据层</div>
+            <div class="layer-items">
+              <span>IPFS 分布式存储</span>
+              <span>PostgreSQL</span>
+              <span>Redis 缓存</span>
+              <span>时序数据库 (IoT)</span>
+              <span>对象存储 (图片/视频)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 技术选型 -->
+        <div class="tech-stack">
+          <h3>技术选型详情</h3>
+          <div class="tech-table-wrapper">
+            <table class="tech-table">
+              <thead>
+                <tr>
+                  <th>层级</th>
+                  <th>技术组件</th>
+                  <th>选型理由</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>区块链底层</td>
+                  <td>Hyperledger Fabric 2.5</td>
+                  <td>联盟链架构，支持私有部署，PBFT 共识适合企业场景，通道机制实现数据隔离</td>
+                </tr>
+                <tr>
+                  <td>智能合约</td>
+                  <td>Chaincode (Go)</td>
+                  <td>Fabric 原生合约语言，性能优异，适合供应链高频写入场景</td>
+                </tr>
+                <tr>
+                  <td>分布式存储</td>
+                  <td>IPFS + Filecoin</td>
+                  <td>大文件（图片、视频、检测报告）去中心化存储，链上仅存哈希</td>
+                </tr>
+                <tr>
+                  <td>身份管理</td>
+                  <td>Fabric CA + MSP</td>
+                  <td>证书颁发与管理，确保每个操作主体可识别、可追溯</td>
+                </tr>
+                <tr>
+                  <td>API 网关</td>
+                  <td>Kong + Nginx</td>
+                  <td>统一入口、限流、鉴权，支持 RESTful 和 gRPC 双协议</td>
+                </tr>
+                <tr>
+                  <td>后端服务</td>
+                  <td>Go + Gin 框架</td>
+                  <td>高并发处理，与 Fabric SDK 无缝集成</td>
+                </tr>
+                <tr>
+                  <td>前端应用</td>
+                  <td>Vue 3 + 微信小程序</td>
+                  <td>跨端覆盖，消费者端使用微信小程序降低使用门槛</td>
+                </tr>
+                <tr>
+                  <td>IoT 接入</td>
+                  <td>MQTT + EMQX</td>
+                  <td>轻量级物联网协议，支持海量传感器设备接入</td>
+                </tr>
+                <tr>
+                  <td>监控运维</td>
+                  <td>Prometheus + Grafana</td>
+                  <td>全链路监控，区块链节点健康状态实时告警</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 区块链网络拓扑 -->
+        <div class="network-topology">
+          <h3>联盟链网络拓扑</h3>
+          <div class="topology-visual">
+            <div class="topology-center">
+              <div class="orderer-node">
+                <span class="node-icon">📋</span>
+                <span>Orderer 排序节点</span>
+                <small>Raft 共识</small>
+              </div>
+            </div>
+            <div class="topology-orgs">
+              <div class="org-node" data-org="农户协会">
+                <span class="node-icon">👨‍🌾</span>
+                <span>Org1: 农户协会</span>
+                <div class="peer-nodes">
+                  <span>Peer0</span>
+                  <span>Peer1</span>
+                </div>
+              </div>
+              <div class="org-node" data-org="加工企业">
+                <span class="node-icon">🏭</span>
+                <span>Org2: 加工企业</span>
+                <div class="peer-nodes">
+                  <span>Peer0</span>
+                  <span>Peer1</span>
+                </div>
+              </div>
+              <div class="org-node" data-org="物流公司">
+                <span class="node-icon">🚛</span>
+                <span>Org3: 物流公司</span>
+                <div class="peer-nodes">
+                  <span>Peer0</span>
+                  <span>Peer1</span>
+                </div>
+              </div>
+              <div class="org-node" data-org="监管部门">
+                <span class="node-icon">🏛️</span>
+                <span>Org4: 监管部门</span>
+                <div class="peer-nodes">
+                  <span>Peer0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="topology-note">
+            每个组织运行独立的 Peer 节点，拥有各自的账本副本。交易需经背书策略（如 2/4 组织签名）验证后方可写入。
+            监管部门节点仅拥有读权限，不可发起写入交易。
+          </p>
+        </div>
+
+        <!-- 数据模型 -->
+        <div class="data-model">
+          <h3>链上数据模型</h3>
+          <div class="model-cards">
+            <div class="model-card">
+              <h4>ProductBatch（产品批次）</h4>
+              <pre><code>{
+  "batchId": "GC-TOM-2026-SD-00421",
+  "productName": "有机番茄",
+  "category": "蔬菜",
+  "quantity": 500,
+  "unit": "kg",
+  "status": "IN_TRANSIT",
+  "createdBy": "0x7a3f...b2c1",
+  "createdAt": 1719360000,
+  "parentBatchId": null,
+  "metadataHash": "QmX7y...9kPq",
+  "currentOwner": "0x9b2e...a4f3"
+}</code></pre>
+            </div>
+            <div class="model-card">
+              <h4>TraceRecord（溯源记录）</h4>
+              <pre><code>{
+  "recordId": "TR-2026-00421-003",
+  "batchId": "GC-TOM-2026-SD-00421",
+  "stage": "PROCESSING",
+  "operator": "0x4c8d...e7a2",
+  "orgName": "绿野加工厂",
+  "action": "清洗分拣包装",
+  "location": "山东潍坊",
+  "timestamp": 1719446400,
+  "dataHash": "QmR3t...7mNw",
+  "signature": "0x8f2a...c9d1",
+  "iotData": {
+    "temperature": 4.2,
+    "humidity": 65
+  }
+}</code></pre>
+            </div>
+            <div class="model-card">
+              <h4>QualityReport（质检报告）</h4>
+              <pre><code>{
+  "reportId": "QR-2026-00421",
+  "batchId": "GC-TOM-2026-SD-00421",
+  "inspector": "0x1f5b...d8e6",
+  "orgName": "山东省质检中心",
+  "testItems": ["农药残留","重金属","微生物"],
+  "result": "PASS",
+  "reportHash": "QmK9p...2xRt",
+  "certificationNo": "ORG-2026-SD-0088",
+  "issuedAt": 1719532800,
+  "expiresAt": 1751068800
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 业务流程 -->
+    <section class="section" id="workflow">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">05 · 业务流程</span>
+          <h2>有机番茄全链路溯源流程</h2>
+          <p>从种植到消费的 6 大环节，12 次链上操作</p>
+        </div>
+
+        <div class="workflow-timeline" id="workflowTimeline">
+          <!-- JS 动态生成 -->
+        </div>
+
+        <!-- 详细流程说明 -->
+        <div class="workflow-details">
+          <div class="workflow-step-detail">
+            <h3>环节 1：种植登记 🌱</h3>
+            <div class="step-content">
+              <div class="step-info">
+                <p><strong>操作主体：</strong>寿光绿野合作社 · 张农户</p>
+                <p><strong>上链数据：</strong>地块编号、作物品种、种植日期、有机认证编号、施肥用药记录</p>
+                <p><strong>链上操作：</strong>调用 <code>createBatch()</code> 创建产品批次，生成唯一批次 ID</p>
+                <p><strong>IoT 数据：</strong>土壤湿度传感器、气象站数据自动采集上链</p>
+              </div>
+              <div class="step-block">
+                <div class="mini-block">
+                  <span class="block-hash">Hash: 0x1a2b3c...</span>
+                  <span class="block-tx">Tx: createBatch</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="workflow-step-detail">
+            <h3>环节 2：采收记录 🧺</h3>
+            <div class="step-content">
+              <div class="step-info">
+                <p><strong>操作主体：</strong>寿光绿野合作社 · 采收队</p>
+                <p><strong>上链数据：</strong>采收日期、采收数量 (500kg)、采收人员、田间检测结果</p>
+                <p><strong>链上操作：</strong>调用 <code>addTraceRecord()</code> 添加采收环节记录</p>
+                <p><strong>质检前置：</strong>采收时进行农残快检，合格后方可进入下一环节</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="workflow-step-detail">
+            <h3>环节 3：加工包装 🏭</h3>
+            <div class="step-content">
+              <div class="step-info">
+                <p><strong>操作主体：</strong>潍坊绿野加工厂</p>
+                <p><strong>上链数据：</strong>加工工艺、包装规格、生产日期、保质期、操作员信息</p>
+                <p><strong>链上操作：</strong>调用 <code>transferOwnership()</code> 转移批次所有权，<code>addTraceRecord()</code> 记录加工信息</p>
+                <p><strong>批次拆分：</strong>500kg 大批拆分为 1000 盒 × 500g 小批，父子关系上链记录</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="workflow-step-detail">
+            <h3>环节 4：质量检测 🔬</h3>
+            <div class="step-content">
+              <div class="step-info">
+                <p><strong>操作主体：</strong>山东省农产品质量检测中心</p>
+                <p><strong>上链数据：</strong>检测报告编号、检测项目、检测结果、认证签章</p>
+                <p><strong>链上操作：</strong>调用 <code>submitQualityReport()</code> 提交质检报告哈希</p>
+                <p><strong>智能合约验证：</strong>合约自动检查报告签名是否来自认证机构白名单</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="workflow-step-detail">
+            <h3>环节 5：冷链物流 🚚</h3>
+            <div class="step-content">
+              <div class="step-info">
+                <p><strong>操作主体：</strong>顺丰冷链物流</p>
+                <p><strong>上链数据：</strong>运输车辆、司机信息、GPS 轨迹、温湿度实时数据、交接节点</p>
+                <p><strong>链上操作：</strong>调用 <code>addTraceRecord()</code> 记录物流节点，IoT 数据通过 <code>submitIoTData()</code> 自动上链</p>
+                <p><strong>异常预警：</strong>温度超过 8°C 时，智能合约自动触发 <code>Alert</code> 事件通知相关方</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="workflow-step-detail">
+            <h3>环节 6：零售上架 🏪</h3>
+            <div class="step-content">
+              <div class="step-info">
+                <p><strong>操作主体：</strong>北京华联超市朝阳店</p>
+                <p><strong>上链数据：</strong>收货确认、上架时间、销售价格、溯源二维码生成</p>
+                <p><strong>链上操作：</strong>调用 <code>confirmDelivery()</code> 确认收货，<code>generateQRCode()</code> 生成消费者查询码</p>
+                <p><strong>消费者体验：</strong>扫码查看完整 6 环节溯源时间线，验证链上哈希确认数据真实性</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 智能合约 -->
+    <section class="section section-alt" id="smart-contract">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">06 · 智能合约</span>
+          <h2>核心智能合约代码</h2>
+          <p>以 Go Chaincode 展示关键合约逻辑（Hyperledger Fabric）</p>
+        </div>
+
+        <div class="contract-tabs">
+          <button class="contract-tab active" data-contract="batch">批次管理合约</button>
+          <button class="contract-tab" data-contract="trace">溯源记录合约</button>
+          <button class="contract-tab" data-contract="quality">质检合约</button>
+          <button class="contract-tab" data-contract="access">权限控制合约</button>
+        </div>
+
+        <div class="contract-panels">
+          <div class="contract-panel active" id="contract-batch">
+            <div class="code-header">
+              <span>chaincode/batch/batch.go</span>
+              <button class="copy-btn" data-copy="batch">复制代码</button>
+            </div>
+            <pre><code id="code-batch">package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "time"
+    "github.com/hyperledger/fabric-contract-api-go/contractapi"
+)
+
+// ProductBatch 产品批次结构
+type ProductBatch struct {
+    BatchID       string `json:"batchId"`
+    ProductName   string `json:"productName"`
+    Category      string `json:"category"`
+    Quantity      int    `json:"quantity"`
+    Unit          string `json:"unit"`
+    Status        string `json:"status"`
+    CreatedBy     string `json:"createdBy"`
+    CreatedAt     int64  `json:"createdAt"`
+    ParentBatchID string `json:"parentBatchId"`
+    MetadataHash  string `json:"metadataHash"`
+    CurrentOwner  string `json:"currentOwner"`
+}
+
+// BatchContract 批次管理合约
+type BatchContract struct {
+    contractapi.Contract
+}
+
+// CreateBatch 创建新产品批次
+// 仅授权农户组织可调用
+func (c *BatchContract) CreateBatch(
+    ctx contractapi.TransactionContextInterface,
+    batchID string,
+    productName string,
+    category string,
+    quantity int,
+    unit string,
+    metadataHash string,
+) error {
+    // 验证调用者身份
+    clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
+    if err != nil {
+        return fmt.Errorf("获取调用者身份失败: %v", err)
+    }
+    if clientMSPID != "FarmerOrgMSP" {
+        return fmt.Errorf("仅农户组织可创建批次")
+    }
+
+    // 检查批次是否已存在
+    existing, err := ctx.GetStub().GetState(batchID)
+    if err != nil {
+        return fmt.Errorf("查询失败: %v", err)
+    }
+    if existing != nil {
+        return fmt.Errorf("批次 %s 已存在", batchID)
+    }
+
+    creator, _ := ctx.GetClientIdentity().GetID()
+
+    batch := ProductBatch{
+        BatchID:      batchID,
+        ProductName:  productName,
+        Category:     category,
+        Quantity:     quantity,
+        Unit:         unit,
+        Status:       "CREATED",
+        CreatedBy:    creator,
+        CreatedAt:    time.Now().Unix(),
+        MetadataHash: metadataHash,
+        CurrentOwner: creator,
+    }
+
+    batchJSON, _ := json.Marshal(batch)
+    return ctx.GetStub().PutState(batchID, batchJSON)
+}
+
+// TransferOwnership 转移批次所有权
+func (c *BatchContract) TransferOwnership(
+    ctx contractapi.TransactionContextInterface,
+    batchID string,
+    newOwner string,
+) error {
+    batch, err := c.GetBatch(ctx, batchID)
+    if err != nil {
+        return err
+    }
+
+    caller, _ := ctx.GetClientIdentity().GetID()
+    if batch.CurrentOwner != caller {
+        return fmt.Errorf("仅当前所有者可转移批次")
+    }
+
+    batch.CurrentOwner = newOwner
+    batch.Status = "TRANSFERRED"
+
+    batchJSON, _ := json.Marshal(batch)
+    return ctx.GetStub().PutState(batchID, batchJSON)
+}
+
+// SplitBatch 批次拆分
+func (c *BatchContract) SplitBatch(
+    ctx contractapi.TransactionContextInterface,
+    parentBatchID string,
+    childBatchIDs []string,
+    quantities []int,
+) error {
+    parent, err := c.GetBatch(ctx, parentBatchID)
+    if err != nil {
+        return err
+    }
+
+    totalQty := 0
+    for _, q := range quantities {
+        totalQty += q
+    }
+    if totalQty != parent.Quantity {
+        return fmt.Errorf("拆分数量之和必须等于原批次数量")
+    }
+
+    for i, childID := range childBatchIDs {
+        child := ProductBatch{
+            BatchID:       childID,
+            ProductName:   parent.ProductName,
+            Category:      parent.Category,
+            Quantity:      quantities[i],
+            Unit:          parent.Unit,
+            Status:        "CREATED",
+            CreatedBy:     parent.CreatedBy,
+            CreatedAt:     time.Now().Unix(),
+            ParentBatchID: parentBatchID,
+            CurrentOwner:  parent.CurrentOwner,
+        }
+        childJSON, _ := json.Marshal(child)
+        ctx.GetStub().PutState(childID, childJSON)
+    }
+
+    parent.Status = "SPLIT"
+    parentJSON, _ := json.Marshal(parent)
+    return ctx.GetStub().PutState(parentBatchID, parentJSON)
+}
+
+// GetBatch 查询批次信息
+func (c *BatchContract) GetBatch(
+    ctx contractapi.TransactionContextInterface,
+    batchID string,
+) (*ProductBatch, error) {
+    batchJSON, err := ctx.GetStub().GetState(batchID)
+    if err != nil {
+        return nil, fmt.Errorf("查询失败: %v", err)
+    }
+    if batchJSON == nil {
+        return nil, fmt.Errorf("批次 %s 不存在", batchID)
+    }
+
+    var batch ProductBatch
+    json.Unmarshal(batchJSON, &batch)
+    return &batch, nil
+}</code></pre>
+          </div>
+
+          <div class="contract-panel" id="contract-trace">
+            <div class="code-header">
+              <span>chaincode/trace/trace.go</span>
+              <button class="copy-btn" data-copy="trace">复制代码</button>
+            </div>
+            <pre><code id="code-trace">// AddTraceRecord 添加溯源记录
+func (c *TraceContract) AddTraceRecord(
+    ctx contractapi.TransactionContextInterface,
+    recordID string,
+    batchID string,
+    stage string,
+    action string,
+    location string,
+    dataHash string,
+) error {
+    // 验证批次存在
+    batchJSON, err := ctx.GetStub().GetState(batchID)
+    if err != nil || batchJSON == nil {
+        return fmt.Errorf("批次 %s 不存在", batchID)
+    }
+
+    operator, _ := ctx.GetClientIdentity().GetID()
+
+    record := TraceRecord{
+        RecordID:  recordID,
+        BatchID:   batchID,
+        Stage:     stage,
+        Operator:  operator,
+        Action:    action,
+        Location:  location,
+        Timestamp: time.Now().Unix(),
+        DataHash:  dataHash,
+    }
+
+    // 生成签名
+    recordJSON, _ := json.Marshal(record)
+    record.Signature = generateSignature(recordJSON)
+
+    // 存储记录
+    key := fmt.Sprintf("TRACE_%s_%s", batchID, recordID)
+    return ctx.GetStub().PutState(key, recordJSON)
+}
+
+// GetTraceHistory 获取批次完整溯源历史
+func (c *TraceContract) GetTraceHistory(
+    ctx contractapi.TransactionContextInterface,
+    batchID string,
+) ([]TraceRecord, error) {
+    query := fmt.Sprintf(
+        `{"selector":{"batchId":"%s"},"sort":[{"timestamp":"asc"}]}`,
+        batchID,
+    )
+    resultsIterator, err := ctx.GetStub().GetQueryResult(query)
+    if err != nil {
+        return nil, err
+    }
+    defer resultsIterator.Close()
+
+    var records []TraceRecord
+    for resultsIterator.HasNext() {
+        queryResponse, _ := resultsIterator.Next()
+        var record TraceRecord
+        json.Unmarshal(queryResponse.Value, &record)
+        records = append(records, record)
+    }
+    return records, nil
+}
+
+// SubmitIoTData 提交物联网数据（温度/湿度/GPS）
+func (c *TraceContract) SubmitIoTData(
+    ctx contractapi.TransactionContextInterface,
+    batchID string,
+    deviceID string,
+    temperature float64,
+    humidity float64,
+    latitude float64,
+    longitude float64,
+) error {
+    // 温度异常检测
+    if temperature > 8.0 {
+        // 触发预警事件
+        eventPayload := fmt.Sprintf(
+            `{"batchId":"%s","alert":"TEMPERATURE_EXCEEDED","value":%f}`,
+            batchID, temperature,
+        )
+        ctx.GetStub().SetEvent("TemperatureAlert", []byte(eventPayload))
+    }
+
+    iotData := IoTData{
+        BatchID:     batchID,
+        DeviceID:    deviceID,
+        Temperature: temperature,
+        Humidity:    humidity,
+        Latitude:    latitude,
+        Longitude:   longitude,
+        Timestamp:   time.Now().Unix(),
+    }
+
+    key := fmt.Sprintf("IOT_%s_%d", batchID, time.Now().Unix())
+    dataJSON, _ := json.Marshal(iotData)
+    return ctx.GetStub().PutState(key, dataJSON)
+}</code></pre>
+          </div>
+
+          <div class="contract-panel" id="contract-quality">
+            <div class="code-header">
+              <span>chaincode/quality/quality.go</span>
+              <button class="copy-btn" data-copy="quality">复制代码</button>
+            </div>
+            <pre><code id="code-quality">// 认证机构白名单
+var certifiedInspectors = map[string]bool{
+    "山东省质检中心":   true,
+    "中国有机认证中心": true,
+    "北京食品检测研究院": true,
+}
+
+// SubmitQualityReport 提交质检报告
+func (c *QualityContract) SubmitQualityReport(
+    ctx contractapi.TransactionContextInterface,
+    reportID string,
+    batchID string,
+    orgName string,
+    testItems []string,
+    result string,
+    reportHash string,
+    certificationNo string,
+) error {
+    // 验证检测机构授权
+    if !certifiedInspectors[orgName] {
+        return fmt.Errorf("未授权的检测机构: %s", orgName)
+    }
+
+    // 验证检测结果合法性
+    if result != "PASS" && result != "FAIL" {
+        return fmt.Errorf("无效的检测结果: %s", result)
+    }
+
+    inspector, _ := ctx.GetClientIdentity().GetID()
+
+    report := QualityReport{
+        ReportID:          reportID,
+        BatchID:           batchID,
+        Inspector:         inspector,
+        OrgName:           orgName,
+        TestItems:         testItems,
+        Result:            result,
+        ReportHash:        reportHash,
+        CertificationNo:   certificationNo,
+        IssuedAt:          time.Now().Unix(),
+        ExpiresAt:         time.Now().AddDate(1, 0, 0).Unix(),
+    }
+
+    // 不合格产品自动冻结
+    if result == "FAIL" {
+        ctx.GetStub().InvokeChaincode("batch", [][]byte{
+            []byte("FreezeBatch"),
+            []byte(batchID),
+        }, "greenchain-channel")
+    }
+
+    reportJSON, _ := json.Marshal(report)
+  return ctx.GetStub().PutState(reportID, reportJSON)
+}
+
+// VerifyReport 验证报告真实性
+func (c *QualityContract) VerifyReport(
+    ctx contractapi.TransactionContextInterface,
+    reportID string,
+    reportHash string,
+) (bool, error) {
+    reportJSON, err := ctx.GetStub().GetState(reportID)
+    if err != nil || reportJSON == nil {
+        return false, fmt.Errorf("报告不存在")
+    }
+
+    var report QualityReport
+    json.Unmarshal(reportJSON, &report)
+
+    // 比对哈希值验证报告未被篡改
+    return report.ReportHash == reportHash, nil
+}</code></pre>
+          </div>
+
+          <div class="contract-panel" id="contract-access">
+            <div class="code-header">
+              <span>chaincode/access/access.go</span>
+              <button class="copy-btn" data-copy="access">复制代码</button>
+            </div>
+            <pre><code id="code-access">// 组织角色权限映射
+var orgPermissions = map[string][]string{
+    "FarmerOrgMSP":     {"CREATE_BATCH", "ADD_TRACE", "TRANSFER"},
+    "ProcessorOrgMSP":  {"ADD_TRACE", "TRANSFER", "SPLIT_BATCH"},
+    "LogisticsOrgMSP":  {"ADD_TRACE", "SUBMIT_IOT"},
+    "RetailerOrgMSP":   {"ADD_TRACE", "CONFIRM_DELIVERY"},
+    "InspectorOrgMSP":  {"SUBMIT_REPORT", "VERIFY"},
+    "RegulatorOrgMSP":  {"READ", "AUDIT", "RECALL"},
+}
+
+// CheckPermission 权限检查修饰器
+func CheckPermission(ctx contractapi.TransactionContextInterface,
+    requiredPermission string) error {
+    mspID, err := ctx.GetClientIdentity().GetMSPID()
+    if err != nil {
+        return fmt.Errorf("身份验证失败")
+    }
+
+    permissions, exists := orgPermissions[mspID]
+    if !exists {
+        return fmt.Errorf("未知组织: %s", mspID)
+    }
+
+    for _, perm := range permissions {
+        if perm == requiredPermission {
+            return nil
+        }
+    }
+    return fmt.Errorf("组织 %s 无 %s 权限", mspID, requiredPermission)
+}
+
+// InitiateRecall 发起产品召回（仅监管部门）
+func (c *AccessContract) InitiateRecall(
+    ctx contractapi.TransactionContextInterface,
+    batchID string,
+    reason string,
+) error {
+    if err := CheckPermission(ctx, "RECALL"); err != nil {
+        return err
+    }
+
+    recall := RecallRecord{
+        BatchID:   batchID,
+        Reason:    reason,
+        Initiated: time.Now().Unix(),
+        Status:    "ACTIVE",
+    }
+
+    // 触发召回事件，通知所有相关组织
+    eventPayload, _ := json.Marshal(recall)
+    ctx.GetStub().SetEvent("ProductRecall", eventPayload)
+
+    key := fmt.Sprintf("RECALL_%s", batchID)
+    recallJSON, _ := json.Marshal(recall)
+    return ctx.GetStub().PutState(key, recallJSON)
+}
+
+// 背书策略配置 (endorsement-policy.json)
+// {
+//   "identities": [
+//     { "role": { "name": "peer", "mspId": "FarmerOrgMSP" }},
+//     { "role": { "name": "peer", "mspId": "ProcessorOrgMSP" }},
+//     { "role": { "name": "peer", "mspId": "InspectorOrgMSP" }}
+//   ],
+//   "policy": {
+//     "2-of": [
+//       { "signed-by": 0 },
+//       { "signed-by": 1 },
+//       { "signed-by": 2 }
+//     ]
+//   }
+// }</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 交互演示 -->
+    <section class="section" id="demo">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">07 · 交互演示</span>
+          <h2>区块链溯源交互模拟器</h2>
+          <p>亲手体验农产品从种植到上架的链上操作过程</p>
+        </div>
+
+        <div class="demo-container">
+          <div class="demo-controls">
+            <h3>模拟操作面板</h3>
+            <p class="demo-batch">当前批次：<code id="demoBatchId">GC-TOM-2026-SD-00421</code></p>
+
+            <div class="demo-steps">
+              <button class="demo-step-btn" data-step="plant" disabled>
+                <span class="step-icon">🌱</span>
+                <span>1. 种植登记</span>
+              </button>
+              <button class="demo-step-btn" data-step="harvest">
+                <span class="step-icon">🧺</span>
+                <span>2. 采收记录</span>
+              </button>
+              <button class="demo-step-btn" data-step="process">
+                <span class="step-icon">🏭</span>
+                <span>3. 加工包装</span>
+              </button>
+              <button class="demo-step-btn" data-step="inspect">
+                <span class="step-icon">🔬</span>
+                <span>4. 质量检测</span>
+              </button>
+              <button class="demo-step-btn" data-step="logistics">
+                <span class="step-icon">🚚</span>
+                <span>5. 冷链物流</span>
+              </button>
+              <button class="demo-step-btn" data-step="retail">
+                <span class="step-icon">🏪</span>
+                <span>6. 零售上架</span>
+              </button>
+            </div>
+
+            <button class="btn btn-primary btn-block" id="demoStartBtn">开始模拟：种植登记</button>
+            <button class="btn btn-outline btn-block" id="demoResetBtn">重置模拟</button>
+
+            <div class="demo-qr" id="demoQR" style="display:none;">
+              <div class="qr-code">
+                <div class="qr-pattern"></div>
+              </div>
+              <p>扫码查看溯源信息</p>
+            </div>
+          </div>
+
+          <div class="demo-visualization">
+            <h3>区块链账本实时视图</h3>
+            <div class="blockchain-ledger" id="blockchainLedger">
+              <div class="genesis-block block">
+                <div class="block-header">
+                  <span class="block-num">#0</span>
+                  <span class="block-label">创世区块</span>
+                </div>
+                <div class="block-body">
+                  <div class="block-field">
+                    <span class="field-label">Hash</span>
+                    <span class="field-value">0x0000...genesis</span>
+                  </div>
+                  <div class="block-field">
+                    <span class="field-label">Prev</span>
+                    <span class="field-value">null</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="demo-trace-timeline" id="demoTraceTimeline">
+              <h4>溯源时间线</h4>
+              <div class="trace-empty">点击左侧按钮开始模拟上链操作</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 消费者查询模拟 -->
+        <div class="consumer-query">
+          <h3>消费者溯源查询模拟</h3>
+          <div class="query-box">
+            <input type="text" id="queryInput" placeholder="输入批次号或扫描二维码..." value="GC-TOM-2026-SD-00421" />
+            <button class="btn btn-primary" id="queryBtn">查询溯源</button>
+          </div>
+          <div class="query-result" id="queryResult" style="display:none;">
+            <!-- JS 动态填充 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 效益分析 -->
+    <section class="section section-alt" id="roi">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">08 · 效益分析</span>
+          <h2>实施效益与投资回报</h2>
+          <p>基于某省 50 家农业合作社试点数据的分析</p>
+        </div>
+
+        <div class="roi-metrics">
+          <div class="roi-card">
+            <span class="roi-icon">📈</span>
+            <span class="roi-value">35%</span>
+            <span class="roi-label">品牌产品溢价提升</span>
+          </div>
+          <div class="roi-card">
+            <span class="roi-icon">⏱️</span>
+            <span class="roi-value">92%</span>
+            <span class="roi-label">追溯时间缩短</span>
+          </div>
+          <div class="roi-card">
+            <span class="roi-icon">💰</span>
+            <span class="roi-value">60%</span>
+            <span class="roi-label">召回成本降低</span>
+          </div>
+          <div class="roi-card">
+            <span class="roi-icon">😊</span>
+            <span class="roi-value">78%</span>
+            <span class="roi-label">消费者信任度提升</span>
+          </div>
+        </div>
+
+        <div class="implementation-plan">
+          <h3>实施路线图</h3>
+          <div class="plan-timeline">
+            <div class="plan-phase">
+              <div class="phase-marker">P1</div>
+              <div class="phase-content">
+                <h4>第一阶段：基础建设（1-3 月）</h4>
+                <ul>
+                  <li>部署联盟链网络（4 组织 7 节点）</li>
+                  <li>开发核心智能合约并审计</li>
+                  <li>搭建 API 网关与后端服务</li>
+                  <li>完成 10 家试点农户接入</li>
+                </ul>
+              </div>
+            </div>
+            <div class="plan-phase">
+              <div class="phase-marker">P2</div>
+              <div class="phase-content">
+                <h4>第二阶段：链路打通（4-6 月）</h4>
+                <ul>
+                  <li>接入加工商、物流商、零售商</li>
+                  <li>IoT 设备对接与数据上链</li>
+                  <li>消费者小程序上线</li>
+                  <li>质检机构报告上链</li>
+                </ul>
+              </div>
+            </div>
+            <div class="plan-phase">
+              <div class="phase-marker">P3</div>
+              <div class="phase-content">
+                <h4>第三阶段：规模推广（7-12 月）</h4>
+                <ul>
+                  <li>扩展至 50+ 合作社、200+ 产品 SKU</li>
+                  <li>监管部门审计系统上线</li>
+                  <li>跨链接入（与其他省份平台互认）</li>
+                  <li>数据分析与商业智能报表</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cost-analysis">
+          <h3>成本估算（首年）</h3>
+          <div class="cost-table-wrapper">
+            <table class="cost-table">
+              <thead>
+                <tr>
+                  <th>成本项</th>
+                  <th>明细</th>
+                  <th>金额（万元）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>基础设施</td>
+                  <td>服务器 7 台、网络设备、IPFS 节点</td>
+                  <td>45</td>
+                </tr>
+                <tr>
+                  <td>软件开发</td>
+                  <td>合约开发、后端、前端、小程序</td>
+                  <td>120</td>
+                </tr>
+                <tr>
+                  <td>智能合约审计</td>
+                  <td>第三方安全审计</td>
+                  <td>15</td>
+                </tr>
+                <tr>
+                  <td>IoT 设备</td>
+                  <td>传感器、GPS、RFID 标签（50 套）</td>
+                  <td>30</td>
+                </tr>
+                <tr>
+                  <td>运维人力</td>
+                  <td>3 人运维团队</td>
+                  <td>60</td>
+                </tr>
+                <tr>
+                  <td>培训推广</td>
+                  <td>农户培训、市场推广</td>
+                  <td>20</td>
+                </tr>
+                <tr class="total-row">
+                  <td colspan="2"><strong>合计</strong></td>
+                  <td><strong>290</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">09 · 常见问题</span>
+          <h2>常见问题解答</h2>
+        </div>
+
+        <div class="faq-list">
+          <details class="faq-item" open>
+            <summary>区块链溯源与二维码溯源有什么区别？</summary>
+            <p>传统二维码溯源只是链接到一个中心化数据库的查询页面，数据可以被后台管理员随时修改。区块链溯源将关键数据的哈希值写入不可篡改的分布式账本，任何人都可以验证数据是否被篡改。二维码只是查询入口，区块链才是信任基础。</p>
+          </details>
+          <details class="faq-item">
+            <summary>为什么不使用公有链（如以太坊）？</summary>
+            <p>农产品溯源涉及企业商业机密（如供应商价格、产量数据），不适合全部公开在公有链上。联盟链允许控制参与节点和数据可见性，同时保留区块链的核心优势（不可篡改、多方共识）。此外，公有链的交易费用和 TPS 限制也不适合高频供应链写入场景。</p>
+          </details>
+          <details class="faq-item">
+            <summary>上链的数据会不会太多导致性能问题？</summary>
+            <p>平台采用"链上哈希 + 链下存储"的混合架构。大文件（图片、视频、完整检测报告）存储在 IPFS 中，链上仅保存哈希值（32 字节）。关键业务数据（批次信息、溯源记录、质检结果）直接上链。实测 TPS 可达 500+，完全满足供应链场景需求。</p>
+          </details>
+          <details class="faq-item">
+            <summary>如果某个节点作恶怎么办？</summary>
+            <p>联盟链采用 PBFT 共识机制，交易需要满足背书策略（如 3 组织中至少 2 个签名）才能写入。单个节点无法独自篡改账本。此外，每次写入都记录操作者身份（MSP 证书），可追溯至具体组织和个人。监管部门可随时审计异常操作。</p>
+          </details>
+          <details class="faq-item">
+            <summary>小农户没有技术能力怎么使用？</summary>
+            <p>平台提供极简的移动端 APP，农户只需拍照、填写基本信息、点击"上链"即可。IoT 传感器数据自动采集。平台运营方提供线下培训和 7×24 客服支持。实际试点中，60 岁以上农户经过 30 分钟培训即可独立操作。</p>
+          </details>
+          <details class="faq-item">
+            <summary>溯源数据是否具有法律效力？</summary>
+            <p>根据《最高人民法院关于互联网法院审理案件若干问题的规定》，区块链存证经核验无误的，可以作为认定事实的依据。本平台采用符合国密标准的加密算法，时间戳由区块链网络共同见证，司法认可度较高。已有多个法院采信区块链溯源证据的案例。</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="logo-icon">⛓</span>
+          <span>绿链溯源 GreenChain</span>
+          <p>基于区块链的农产品全链路溯源平台 · 详细使用案例</p>
+        </div>
+        <div class="footer-links">
+          <h4>案例章节</h4>
+          <a href="#overview">案例概述</a>
+          <a href="#architecture">技术架构</a>
+          <a href="#demo">交互演示</a>
+          <a href="#smart-contract">智能合约</a>
+        </div>
+        <div class="footer-links">
+          <h4>技术参考</h4>
+          <a href="https://hyperledger-fabric.readthedocs.io/" target="_blank" rel="noopener">Hyperledger Fabric</a>
+          <a href="https://ipfs.io/" target="_blank" rel="noopener">IPFS</a>
+          <a href="https://www.ibm.com/blockchain" target="_blank" rel="noopener">IBM Blockchain</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 绿链溯源 GreenChain · 区块链使用案例演示网站</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
