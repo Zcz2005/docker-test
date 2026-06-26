@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>电子证据区块链存证平台 | 南方公证</title>
+  <meta name="description" content="基于区块链的电子证据存证与溯源系统 - 直播取证、哈希上链、公证封印、全链路可追溯">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="logo">⛓</div>
+    <span>证据链 · EvidenceChain</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#home" class="active">首页</a></li>
+    <li><a href="#usecase">使用案例</a></li>
+    <li><a href="#architecture">技术架构</a></li>
+    <li><a href="#demo">在线演示</a></li>
+    <li><a href="#explorer">区块浏览</a></li>
+    <li><a href="#verify">证据验证</a></li>
+    <li><a href="#api">API 文档</a></li>
+  </ul>
+  <div class="nav-status">
+    <span class="status-dot"></span>
+    <span id="nav-chain-status">链状态加载中...</span>
+  </div>
+</nav>
+
+<main>
+  <!-- Hero -->
+  <section id="home" class="hero">
+    <div class="hero-content">
+      <div>
+        <h1>电子证据<br><span>区块链存证</span>平台</h1>
+        <p>
+          将直播取证视频的文件哈希、案件信息、保管流转记录写入不可篡改的区块链，
+          实现从「自动化取证 → 云存储上传 → 链上存证 → 公证封印」的全链路可信溯源。
+        </p>
+        <div class="hero-actions">
+          <a href="#demo" class="btn btn-primary">🚀 立即体验</a>
+          <a href="#usecase" class="btn btn-outline">📖 了解案例</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-card">
+            <div class="value" id="stat-blocks">-</div>
+            <div class="label">区块高度</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="stat-evidence">-</div>
+            <div class="label">已存证证据</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="stat-valid">-</div>
+            <div class="label">链完整性</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <h3 style="margin-bottom:1rem;font-size:0.9rem;color:var(--text-secondary)">区块链数据结构预览</h3>
+        <div class="chain-visual" id="hero-chain-preview">
+          <div class="chain-block">
+            <div>Block #0 <span class="badge badge-purple">Genesis</span></div>
+            <div class="hash">hash: 0000a3f8...e21b</div>
+            <div style="color:var(--text-muted);margin-top:4px">南方公证电子证据链创世区块</div>
+          </div>
+          <div class="chain-block">
+            <div>Block #1 <span class="badge badge-blue">3 txs</span></div>
+            <div class="hash">hash: 00004b2c...9f01</div>
+            <div style="color:var(--text-muted);margin-top:4px">证据提交 ×3 (Douyin/Kuaishou/XHS)</div>
+          </div>
+          <div class="chain-block">
+            <div>Block #2 <span class="badge badge-green">2 txs</span></div>
+            <div class="hash">hash: 00007d1e...4a88</div>
+            <div style="color:var(--text-muted);margin-top:4px">保管转移 + 公证封印</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Case -->
+  <section id="usecase" class="section">
+    <h2 class="section-title">区块链使用案例</h2>
+    <p class="section-subtitle">
+      本案例以「网络直播侵权取证」为场景，展示区块链在电子证据领域的典型应用：
+      解决证据易篡改、溯源难、多方互信难三大痛点。
+    </p>
+
+    <div class="card" style="margin-bottom:2rem;padding:2rem">
+      <h3 style="margin-bottom:1rem">📋 案例背景：直播售假侵权取证</h3>
+      <p style="color:var(--text-secondary);margin-bottom:1rem">
+        权利人委托公证处对某抖音主播销售假冒化妆品的直播行为进行取证。系统自动录制直播视频，
+        计算 SHA-256 哈希后上传至天翼云对象存储，同时将关键元数据写入区块链，形成完整的证据链。
+      </p>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-num">1</div>
+          <h4>任务下发</h4>
+          <p>公证处通过 API 下发取证任务</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">2</div>
+          <h4>自动录屏</h4>
+          <p>系统录制直播并保存视频</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">3</div>
+          <h4>哈希计算</h4>
+          <p>SHA-256 指纹唯一标识文件</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">4</div>
+          <h4>云存储</h4>
+          <p>视频上传至 ZOS 对象存储</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">5</div>
+          <h4>链上存证</h4>
+          <p>哈希+元数据写入区块链</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">6</div>
+          <h4>公证封印</h4>
+          <p>出具电子数据保管证明</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:2rem">
+      <div class="card">
+        <div class="card-icon" style="background:rgba(239,68,68,0.15)">🔴</div>
+        <h3>痛点一：证据易篡改</h3>
+        <p>传统电子证据以文件形式存储，修改后难以察觉。区块链通过哈希上链，任何文件变动都会导致哈希不匹配，篡改一目了然。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:rgba(245,158,11,0.15)">🟡</div>
+        <h3>痛点二：溯源链条断裂</h3>
+        <p>证据从采集到出庭经历多环节流转。链上记录每次保管转移和公证操作，形成不可断裂的时间线。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:rgba(16,185,129,0.15)">🟢</div>
+        <h3>痛点三：多方互信困难</h3>
+        <p>当事人、公证处、法院对证据真实性各执一词。区块链的分布式共识和 PoW 机制提供技术层面的信任基础。</p>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:1rem">案例时间线：案件 GZ2025-EV-00128</h3>
+    <div class="timeline" id="case-timeline">
+      <div class="timeline-item">
+        <div class="time">加载中...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section id="architecture" class="section section-alt">
+    <div style="max-width:1200px;margin:0 auto">
+      <h2 class="section-title">技术架构</h2>
+      <p class="section-subtitle">四层架构设计：应用层、链层、存储层、信任层，各层职责清晰、松耦合。</p>
+
+      <div class="arch-diagram">
+        <div style="color:var(--text-muted);font-size:0.85rem">应用层 Application Layer</div>
+        <div class="arch-layer">
+          <div class="arch-box highlight">取证调度系统</div>
+          <div class="arch-box highlight">Web 存证平台</div>
+          <div class="arch-box highlight">公证处管理端</div>
+          <div class="arch-box highlight">法院核验门户</div>
+        </div>
+        <div class="arch-arrow">▼</div>
+        <div style="color:var(--text-muted);font-size:0.85rem">链层 Blockchain Layer</div>
+        <div class="arch-layer">
+          <div class="arch-box">交易池 (Mempool)</div>
+          <div class="arch-box">PoW 共识</div>
+          <div class="arch-box">Merkle Tree</div>
+          <div class="arch-box">链验证引擎</div>
+        </div>
+        <div class="arch-arrow">▼</div>
+        <div style="color:var(--text-muted);font-size:0.85rem">存储层 Storage Layer</div>
+        <div class="arch-layer">
+          <div class="arch-box">链数据 (JSON)</div>
+          <div class="arch-box">MySQL 任务库</div>
+          <div class="arch-box">ZOS 对象存储</div>
+        </div>
+        <div class="arch-arrow">▼</div>
+        <div style="color:var(--text-muted);font-size:0.85rem">信任层 Trust Layer</div>
+        <div class="arch-layer">
+          <div class="arch-box">SHA-256 哈希</div>
+          <div class="arch-box">交易签名</div>
+          <div class="arch-box">时间戳锚定</div>
+          <div class="arch-box">公证处 CA 签章</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:2rem">
+        <div class="card">
+          <h3>区块结构 (Block)</h3>
+          <div class="code-block" style="margin-top:1rem">
+<span class="comment">// 每个区块包含以下字段</span>
+{
+  <span class="string">"index"</span>: <span class="keyword">1</span>,
+  <span class="string">"timestamp"</span>: <span class="keyword">1718863822.456</span>,
+  <span class="string">"previous_hash"</span>: <span class="string">"0000a3f8...e21b"</span>,
+  <span class="string">"merkle_root"</span>: <span class="string">"7c2d9e1f..."</span>,
+  <span class="string">"nonce"</span>: <span class="keyword">12847</span>,
+  <span class="string">"difficulty"</span>: <span class="keyword">4</span>,
+  <span class="string">"hash"</span>: <span class="string">"00004b2c...9f01"</span>,
+  <span class="string">"transactions"</span>: [...]
+}
+          </div>
+        </div>
+        <div class="card">
+          <h3>交易类型 (Transaction Types)</h3>
+          <div style="margin-top:1rem">
+            <p style="margin-bottom:0.75rem"><span class="badge badge-blue">evidence_submit</span> 证据提交 — 将文件哈希和案件元数据上链</p>
+            <p style="margin-bottom:0.75rem"><span class="badge badge-yellow">custody_transfer</span> 保管转移 — 记录证据保管权变更</p>
+            <p style="margin-bottom:0.75rem"><span class="badge badge-green">notary_seal</span> 公证封印 — 公证处出具保管证明</p>
+            <p style="margin-bottom:0.75rem"><span class="badge badge-purple">genesis</span> 创世交易 — 链初始化</p>
+          </div>
+          <h3 style="margin-top:1.5rem">共识机制</h3>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.5rem">
+            采用工作量证明 (Proof of Work)，要求区块哈希以 N 个零开头（当前难度=4）。
+            打包时自动挖矿，确保写入成本，防止垃圾交易攻击。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo -->
+  <section id="demo" class="section">
+    <h2 class="section-title">在线演示</h2>
+    <p class="section-subtitle">模拟完整的证据上链流程：生成哈希 → 提交交易 → 挖矿打包 → 链上可查。</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>步骤 1：生成证据哈希</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;margin:0.75rem 0">
+          输入文件名和模拟内容，计算 SHA-256 哈希（真实场景中由录制系统自动计算）。
+        </p>
+        <div class="form-group">
+          <label>文件名</label>
+          <input type="text" id="demo-filename" value="my_evidence_20250626.mp4">
+        </div>
+        <div class="form-group">
+          <label>模拟文件内容</label>
+          <textarea id="demo-content" placeholder="输入任意文本模拟文件内容...">直播取证视频 - 案件测试数据 - 2025-06-26</textarea>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="generateHash()">计算 SHA-256</button>
+        <div id="hash-result" style="margin-top:1rem"></div>
+      </div>
+
+      <div class="card">
+        <h3>步骤 2：提交证据交易</h3>
+        <div class="form-group">
+          <label>证据哈希 (SHA-256)</label>
+          <input type="text" id="submit-hash" placeholder="64位十六进制哈希">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>案件编号</label>
+            <input type="text" id="submit-case" value="GZ2025-EV-DEMO01">
+          </div>
+          <div class="form-group">
+            <label>任务 ID</label>
+            <input type="text" id="submit-task" value="TASK-demo-001">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>平台</label>
+            <select id="submit-platform">
+              <option>Douyin</option>
+              <option>Kuaishou</option>
+              <option>Xiaohongshu</option>
+              <option>Huajiao</option>
+              <option>Momo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>提交人</label>
+            <input type="text" id="submit-submitter" value="演示用户">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>文件名</label>
+          <input type="text" id="submit-filename" value="demo_evidence.mp4">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="submitEvidence()">提交到交易池</button>
+        <div id="submit-result" style="margin-top:1rem"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h3>步骤 3：挖矿打包</h3>
+        <div>
+          <span style="color:var(--text-muted);font-size:0.85rem;margin-right:1rem">
+            待打包交易: <strong id="pending-count">0</strong>
+          </span>
+          <button class="btn btn-primary btn-sm" onclick="mineBlock()">⛏ 开始挖矿</button>
+        </div>
+      </div>
+      <div id="mine-result"></div>
+      <div class="table-wrap" style="margin-top:1rem">
+        <table>
+          <thead>
+            <tr>
+              <th>交易 ID</th>
+              <th>类型</th>
+              <th>案件编号</th>
+              <th>证据哈希</th>
+              <th>平台</th>
+            </tr>
+          </thead>
+          <tbody id="pending-table">
+            <tr><td colspan="5" style="text-align:center;color:var(--text-muted)">暂无待打包交易</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Explorer -->
+  <section id="explorer" class="section section-alt">
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <div>
+          <h2 class="section-title" style="margin-bottom:0">区块浏览器</h2>
+          <p class="section-subtitle" style="margin-bottom:0;margin-top:0.5rem">查看链上所有区块和交易详情</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="refreshExplorer()">🔄 刷新</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>高度</th>
+              <th>时间</th>
+              <th>哈希</th>
+              <th>前置哈希</th>
+              <th>交易数</th>
+              <th>Nonce</th>
+              <th>矿工</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="blocks-table">
+            <tr><td colspan="8" style="text-align:center">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Verify -->
+  <section id="verify" class="section">
+    <h2 class="section-title">证据验证</h2>
+    <p class="section-subtitle">输入证据文件的 SHA-256 哈希，验证是否已上链存证，查看完整溯源记录。</p>
+
+    <div class="card" style="max-width:700px">
+      <div class="form-group">
+        <label>证据哈希 (SHA-256)</label>
+        <input type="text" id="verify-hash" placeholder="输入 64 位十六进制哈希值">
+      </div>
+      <button class="btn btn-primary" onclick="verifyEvidence()">🔍 验证存证</button>
+      <div style="margin-top:0.75rem">
+        <button class="btn btn-outline btn-sm" onclick="fillDemoHash()">填入演示案件哈希</button>
+      </div>
+      <div id="verify-result" style="margin-top:1.5rem"></div>
+    </div>
+  </section>
+
+  <!-- API Docs -->
+  <section id="api" class="section section-alt">
+    <div style="max-width:1200px;margin:0 auto">
+      <h2 class="section-title">API 文档</h2>
+      <p class="section-subtitle">RESTful API 接口，可与取证系统、公证处后台对接。</p>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('api-chain')">链管理</button>
+        <button class="tab" onclick="switchTab('api-evidence')">证据存证</button>
+        <button class="tab" onclick="switchTab('api-tools')">工具</button>
+      </div>
+
+      <div id="api-chain" class="tab-panel active">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-green">GET</span></td><td class="hash-cell">/api/chain/summary</td><td>链概览（高度、证据数、有效性）</td></tr>
+              <tr><td><span class="badge badge-green">GET</span></td><td class="hash-cell">/api/chain/blocks</td><td>获取所有区块</td></tr>
+              <tr><td><span class="badge badge-green">GET</span></td><td class="hash-cell">/api/chain/blocks/{index}</td><td>获取指定区块</td></tr>
+              <tr><td><span class="badge badge-green">GET</span></td><td class="hash-cell">/api/chain/pending</td><td>待打包交易池</td></tr>
+              <tr><td><span class="badge badge-green">GET</span></td><td class="hash-cell">/api/chain/validate</td><td>验证链完整性</td></tr>
+              <tr><td><span class="badge badge-blue">POST</span></td><td class="hash-cell">/api/chain/mine</td><td>挖矿打包待处理交易</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="api-evidence" class="tab-panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-blue">POST</span></td><td class="hash-cell">/api/evidence/submit</td><td>提交证据存证交易</td></tr>
+              <tr><td><span class="badge badge-blue">POST</span></td><td class="hash-cell">/api/evidence/custody</td><td>记录保管权转移</td></tr>
+              <tr><td><span class="badge badge-blue">POST</span></td><td class="hash-cell">/api/evidence/notary</td><td>公证封印</td></tr>
+              <tr><td><span class="badge badge-green">GET</span></td><td class="hash-cell">/api/evidence/verify/{hash}</td><td>验证证据是否上链</td></tr>
+              <tr><td><span class="badge badge-green">GET</span></td><td class="hash-cell">/api/case/{case_num}/timeline</td><td>案件溯源时间线</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block" style="margin-top:1.5rem">
+<span class="comment"># 提交证据存证示例</span>
+curl -X POST http://localhost:8000/api/evidence/submit \
+  -H <span class="string">"Content-Type: application/json"</span> \
+  -d <span class="string">'{
+    "evidence_hash": "a3f8c2...",
+    "case_num": "GZ2025-EV-00128",
+    "task_id": "TASK-8f3a21bc",
+    "platform": "Douyin",
+    "file_name": "live_record.mp4",
+    "file_size": 524288000
+  }'</span>
+        </div>
+      </div>
+
+      <div id="api-tools" class="tab-panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-green">GET</span></td><td class="hash-cell">/api/health</td><td>健康检查</td></tr>
+              <tr><td><span class="badge badge-blue">POST</span></td><td class="hash-cell">/api/tools/hash</td><td>计算模拟文件 SHA-256</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-links">
+    <a href="#home">首页</a>
+    <a href="#usecase">使用案例</a>
+    <a href="#demo">在线演示</a>
+    <a href="#api">API 文档</a>
+  </div>
+  <p>电子证据区块链存证平台 · 演示系统 v1.0.0</p>
+  <p style="margin-top:0.5rem">本系统为技术演示用途，区块链数据存储于本地 JSON 文件</p>
+</footer>
+
+<!-- Block Detail Modal -->
+<div class="modal-overlay" id="block-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">区块详情</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
