@@ -1,0 +1,220 @@
+<!-- 数据库扩展内容：视图、触发器、示例数据、查询 -->
+<div class="db-ext-content">
+
+  <div class="db-views">
+    <h3>数据库视图（Views）</h3>
+    <div class="code-header"><span>sql/views/001_trace_views.sql</span></div>
+    <pre><code>-- 完整溯源视图：聚合批次 + 溯源 + 质检
+CREATE OR REPLACE VIEW v_batch_trace_full AS
+SELECT
+    b.batch_id,
+    b.product_name,
+    b.category,
+    b.quantity,
+    b.unit,
+    b.status,
+    o.name AS org_name,
+    o.org_type,
+    tr.record_id,
+    tr.stage,
+    tr.action,
+    tr.data_hash,
+    tr.operated_at,
+    u.real_name AS operator_name,
+    qr.result AS quality_result,
+    qr.report_hash,
+    bt.tx_id AS chain_tx_id,
+    bt.status AS chain_status
+FROM product_batches b
+JOIN organizations o ON b.org_id = o.id
+LEFT JOIN trace_records tr ON b.batch_id = tr.batch_id
+LEFT JOIN users u ON tr.operator_id = u.id
+LEFT JOIN quality_reports qr ON b.batch_id = qr.batch_id
+LEFT JOIN blockchain_transactions bt ON b.chain_tx_id = bt.tx_id
+ORDER BY b.batch_id, tr.operated_at;
+
+-- 消费者公开查询视图（脱敏）
+CREATE OR REPLACE VIEW v_public_trace AS
+SELECT
+    b.batch_id,
+    b.product_name,
+    b.status,
+    tr.stage,
+    tr.action,
+    o.name AS org_name,
+    tr.operated_at,
+    tr.data_hash,
+    qr.result AS quality_result
+FROM product_batches b
+JOIN trace_records tr ON b.batch_id = tr.batch_id
+JOIN organizations o ON tr.org_id = o.id
+LEFT JOIN quality_reports qr ON b.batch_id = qr.batch_id
+WHERE b.status NOT IN ('RECALLED', 'DELETED');
+
+-- 链上交易待确认监控视图
+CREATE OR REPLACE VIEW v_pending_chain_tx AS
+SELECT
+    bt.tx_id,
+    bt.chaincode,
+    bt.function_name,
+    bt.ref_table,
+    bt.ref_id,
+    bt.submitted_at,
+    EXTRACT(EPOCH FROM (NOW() - bt.submitted_at)) AS pending_seconds
+FROM blockchain_transactions bt
+WHERE bt.status IN ('SUBMITTED', 'ENDORSED')
+  AND bt.submitted_at &lt; NOW() - INTERVAL '30 seconds';</code></pre>
+  </div>
+
+  <div class="db-triggers">
+    <h3>触发器与自动审计</h3>
+    <div class="code-header"><span>sql/triggers/001_audit_triggers.sql</span></div>
+    <pre><code>-- 批次状态变更自动审计
+CREATE OR REPLACE FUNCTION fn_audit_batch_status()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.status IS DISTINCT FROM NEW.status THEN
+        INSERT INTO audit_logs (action, resource_type, resource_id, request_data)
+        VALUES (
+            'BATCH_STATUS_CHANGE',
+            'product_batches',
+            NEW.batch_id,
+            jsonb_build_object(
+                'old_status', OLD.status,
+                'new_status', NEW.status,
+                'changed_at', NOW()
+            )
+        );
+    END IF;
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_batch_status_audit
+    BEFORE UPDATE ON product_batches
+    FOR EACH ROW EXECUTE FUNCTION fn_audit_batch_status();
+
+-- 链上交易确认后自动更新批次
+CREATE OR REPLACE FUNCTION fn_sync_chain_status()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'COMMITTED' AND NEW.ref_table = 'product_batches' THEN
+        UPDATE product_batches
+        SET chain_status = 'CONFIRMED',
+            chain_tx_id = NEW.tx_id,
+            block_number = NEW.block_number
+        WHERE batch_id = NEW.ref_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_chain_tx_sync
+    AFTER UPDATE ON blockchain_transactions
+    FOR EACH ROW EXECUTE FUNCTION fn_sync_chain_status();</code></pre>
+  </div>
+
+  <div class="db-sample">
+    <h3>示例数据（Seed Data）</h3>
+    <div class="code-header"><span>sql/seed/001_sample_data.sql</span></div>
+    <pre><code>-- 组织数据
+INSERT INTO organizations (org_code, name, org_type, msp_id) VALUES
+('ORG-FARMER-001', '寿光绿野合作社', 'FARMER', 'FarmerOrgMSP'),
+('ORG-PROC-001', '潍坊绿野加工厂', 'PROCESSOR', 'ProcessorOrgMSP'),
+('ORG-LOGI-001', '顺丰冷链物流', 'LOGISTICS', 'LogisticsOrgMSP'),
+('ORG-RETAIL-001', '北京华联超市', 'RETAILER', 'RetailerOrgMSP'),
+('ORG-QC-001', '山东省质检中心', 'INSPECTOR', 'InspectorOrgMSP'),
+('ORG-REG-001', '山东省农业农村厅', 'REGULATOR', 'RegulatorOrgMSP');
+
+-- 用户数据（密码均为 bcrypt hash）
+INSERT INTO users (org_id, username, password_hash, real_name, role, did) VALUES
+(1, 'zhang_farmer', '$2a$10$...', '张农户', 'OPERATOR', 'did:greenchain:zhang001'),
+(2, 'li_processor', '$2a$10$...', '李加工', 'OPERATOR', 'did:greenchain:li002'),
+(3, 'wang_logistics', '$2a$10$...', '王物流', 'OPERATOR', 'did:greenchain:wang003'),
+(5, 'zhao_inspector', '$2a$10$...', '赵检测', 'OPERATOR', 'did:greenchain:zhao005');
+
+-- 产品批次
+INSERT INTO product_batches (batch_id, product_name, category, quantity, unit, status, org_id, created_by, metadata_hash, chain_status, planted_at) VALUES
+('GC-TOM-2026-SD-00421', '有机番茄', '蔬菜', 500, 'kg', 'ON_SHELF', 1, 1, 'QmX7yK9p3mNw8Rt2xVb', 'CONFIRMED', '2026-03-15');
+
+-- 溯源记录（6 环节）
+INSERT INTO trace_records (record_id, batch_id, stage, action, operator_id, org_id, location, data_hash, operated_at) VALUES
+('TR-2026-00421-001', 'GC-TOM-2026-SD-00421', 'PLANTING', '有机番茄种植登记', 1, 1, '山东寿光', 'Qm1a2b3c4d', '2026-03-15 08:30:00+08'),
+('TR-2026-00421-002', 'GC-TOM-2026-SD-00421', 'HARVESTING', '采收 500kg', 1, 1, '山东寿光', 'Qm5e6f7g8h', '2026-06-01 06:00:00+08'),
+('TR-2026-00421-003', 'GC-TOM-2026-SD-00421', 'PROCESSING', '清洗分拣包装', 2, 2, '山东潍坊', 'Qm9i0j1k2l', '2026-06-02 10:15:00+08'),
+('TR-2026-00421-004', 'GC-TOM-2026-SD-00421', 'INSPECTION', '质检合格', 4, 5, '济南', 'Qm3m4n5o6p', '2026-06-03 14:20:00+08'),
+('TR-2026-00421-005', 'GC-TOM-2026-SD-00421', 'LOGISTICS', '冷链运输', 3, 3, '潍坊→北京', 'Qm7q8r9s0t', '2026-06-04 08:00:00+08'),
+('TR-2026-00421-006', 'GC-TOM-2026-SD-00421', 'RETAIL', '上架销售', 3, 4, '北京朝阳', 'Qm1u2v3w4x', '2026-06-05 09:30:00+08');</code></pre>
+  </div>
+
+  <div class="db-queries">
+    <h3>常用业务查询 SQL</h3>
+    <div class="code-header"><span>sql/queries/business_queries.sql</span></div>
+    <pre><code>-- ① 消费者溯源查询（与 API /public/trace 等价）
+SELECT tr.stage, tr.action, o.name AS org, tr.operated_at, tr.data_hash
+FROM trace_records tr
+JOIN organizations o ON tr.org_id = o.id
+WHERE tr.batch_id = 'GC-TOM-2026-SD-00421'
+ORDER BY tr.operated_at ASC;
+
+-- ② 召回影响范围分析（含子批次）
+WITH RECURSIVE batch_tree AS (
+    SELECT batch_id, parent_batch_id, quantity, status FROM product_batches
+    WHERE batch_id = 'GC-TOM-2026-SD-00421'
+    UNION ALL
+    SELECT b.batch_id, b.parent_batch_id, b.quantity, b.status
+    FROM product_batches b JOIN batch_tree bt ON b.parent_batch_id = bt.batch_id
+)
+SELECT * FROM batch_tree WHERE status = 'ON_SHELF';
+
+-- ③ IoT 运输温度异常统计
+SELECT
+    batch_id,
+    COUNT(*) FILTER (WHERE value > 8.0) AS alert_count,
+    AVG(value) AS avg_temp,
+    MIN(value) AS min_temp,
+    MAX(value) AS max_temp
+FROM iot_sensor_data
+WHERE sensor_type = 'TEMPERATURE'
+  AND batch_id = 'GC-TOM-2026-SD-00421'
+  AND time BETWEEN '2026-06-04' AND '2026-06-05'
+GROUP BY batch_id;
+
+-- ④ 链上链下数据一致性校验
+SELECT b.batch_id, b.chain_status,
+       bt.status AS tx_status,
+       CASE WHEN b.metadata_hash IS NOT NULL AND bt.status = 'COMMITTED'
+            THEN 'CONSISTENT' ELSE 'CHECK_REQUIRED' END AS consistency
+FROM product_batches b
+LEFT JOIN blockchain_transactions bt ON b.chain_tx_id = bt.tx_id
+WHERE b.chain_status = 'PENDING'
+   OR (b.chain_status = 'CONFIRMED' AND bt.status != 'COMMITTED');
+
+-- ⑤ 组织溯源操作排行（管理报表）
+SELECT o.name, o.org_type,
+       COUNT(tr.id) AS trace_count,
+       COUNT(DISTINCT tr.batch_id) AS batch_count
+FROM trace_records tr
+JOIN organizations o ON tr.org_id = o.id
+WHERE tr.operated_at >= NOW() - INTERVAL '30 days'
+GROUP BY o.id ORDER BY trace_count DESC;</code></pre>
+  </div>
+
+  <div class="db-migration">
+    <h3>数据库迁移策略（Flyway）</h3>
+    <div class="tech-table-wrapper">
+      <table class="tech-table">
+        <thead><tr><th>版本</th><th>文件</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>V1.0.0</td><td>V1_0_0__init_core_tables.sql</td><td>组织、用户、批次核心表</td></tr>
+          <tr><td>V1.1.0</td><td>V1_1_0__trace_tables.sql</td><td>溯源、质检、流转、召回表</td></tr>
+          <tr><td>V1.2.0</td><td>V1_2_0__blockchain_sync.sql</td><td>链同步、IPFS、审计日志</td></tr>
+          <tr><td>V1.3.0</td><td>V1_3_0__iot_timescale.sql</td><td>TimescaleDB 扩展与 Hypertable</td></tr>
+          <tr><td>V1.4.0</td><td>V1_4_0__views_triggers.sql</td><td>视图、触发器、函数</td></tr>
+          <tr><td>V1.5.0</td><td>V1_5_0__indexes_optimize.sql</td><td>复合索引、分区表优化</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

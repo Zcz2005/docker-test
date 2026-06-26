@@ -1,0 +1,143 @@
+version: '3.8'
+
+services:
+  # ========== API 网关 ==========
+  api-gateway:
+    image: kong:3.4
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+    volumes:
+      - ./deploy/kong/kong.yml:/kong/kong.yml
+    depends_on:
+      - batch-service
+      - trace-service
+      - query-service
+
+  # ========== 微服务 ==========
+  auth-service:
+    build: ./services/auth
+    ports: ["8080:8080"]
+    environment:
+      DB_HOST: postgresql
+      DB_NAME: greenchain
+      REDIS_URL: redis://redis:6379
+    depends_on: [postgresql, redis]
+
+  batch-service:
+    build: ./services/batch
+    ports: ["8081:8081"]
+    environment:
+      DB_HOST: postgresql
+      FABRIC_PEER: peer0.farmer.greenchain.com:7051
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on: [postgresql, rabbitmq]
+
+  trace-service:
+    build: ./services/trace
+    ports: ["8082:8082"]
+    environment:
+      DB_HOST: postgresql
+      IPFS_API: http://ipfs:5001
+    depends_on: [postgresql, ipfs]
+
+  query-service:
+    build: ./services/query
+    ports: ["8083:8083"]
+    environment:
+      DB_HOST: postgresql
+      REDIS_URL: redis://redis:6379
+    depends_on: [postgresql, redis]
+
+  iot-service:
+    build: ./services/iot
+    ports: ["8084:8084"]
+    environment:
+      TIMESCALE_HOST: timescaledb
+      MQTT_BROKER: emqx:1883
+    depends_on: [timescaledb, emqx]
+
+  quality-service:
+    build: ./services/quality
+    ports: ["8085:8085"]
+    depends_on: [postgresql, ipfs]
+
+  chain-sync-service:
+    build: ./services/chain-sync
+    ports: ["8086:8086"]
+    depends_on: [postgresql, rabbitmq]
+
+  # ========== 数据库 ==========
+  postgresql:
+    image: postgres:15-alpine
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: greenchain
+      POSTGRES_USER: greenchain
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    ports: ["5433:5432"]
+    environment:
+      POSTGRES_DB: greenchain_iot
+      POSTGRES_USER: greenchain
+    volumes:
+      - ts_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  # ========== 消息队列 & IoT ==========
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports: ["5672:5672", "15672:15672"]
+    environment:
+      RABBITMQ_DEFAULT_USER: greenchain
+
+  emqx:
+    image: emqx:5
+    ports: ["1883:1883", "18083:18083"]
+
+  # ========== 存储 ==========
+  ipfs:
+    image: ipfs/kubo:latest
+    ports: ["5001:5001", "8087:8080"]
+    volumes:
+      - ipfs_data:/data/ipfs
+
+  minio:
+    image: minio/minio
+    ports: ["9000:9000", "9001:9001"]
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+  # ========== 监控 ==========
+  prometheus:
+    image: prom/prometheus
+    ports: ["9090:9090"]
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+
+volumes:
+  pg_data:
+  ts_data:
+  redis_data:
+  ipfs_data:
+  minio_data:

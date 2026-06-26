@@ -152,79 +152,87 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
 
 const demoSteps = {
   plant: {
-    icon: '🌱',
-    label: '种植登记',
-    action: 'createBatch',
+    icon: '🌱', label: '种植登记', action: 'createBatch',
     operator: '寿光绿野合作社 · 张农户',
     detail: '创建批次 GC-TOM-2026-SD-00421，录入有机番茄种植信息',
+    ipfsOps: [
+      { text: 'PUT /api/v0/add metadata.json (2.4KB)' },
+      { text: '→ CID: QmX7yK9p3mNw8Rt2xVb' },
+      { text: 'PUT /api/v0/add farm_photo.jpg (186KB)' },
+      { text: '→ CID: Qm2a8b4c6d0e1f3g5h' },
+    ],
     dbOps: [
-      { type: 'insert', op: 'IPFS', sql: 'PUT metadata → CID: QmX7yK9p...3mNw' },
-      { type: 'insert', op: 'INSERT', sql: 'product_batches (batch_id, status=PENDING)' },
-      { type: 'insert', op: 'INSERT', sql: 'blockchain_transactions (tx_id, CreateBatch)' },
+      { type: 'insert', op: 'INSERT', sql: 'product_batches (GC-TOM-2026-SD-00421, PENDING)' },
+      { type: 'insert', op: 'INSERT', sql: 'ipfs_files (cid=QmX7yK9p..., ref=batch)' },
+      { type: 'insert', op: 'INSERT', sql: 'blockchain_transactions (CreateBatch)' },
       { type: 'update', op: 'UPDATE', sql: 'product_batches SET chain_status=CONFIRMED' },
-      { type: 'cache', op: 'REDIS', sql: 'DEL trace:query:GC-TOM-2026-SD-00421' },
+    ],
+    mqOps: [
+      { event: 'batch.created', route: 'greenchain.events → notification.q' },
+      { event: 'chain.tx.committed', route: 'greenchain.events → chain-sync.q' },
     ],
   },
   harvest: {
-    icon: '🧺',
-    label: '采收记录',
-    action: 'addTraceRecord',
+    icon: '🧺', label: '采收记录', action: 'addTraceRecord',
     operator: '寿光绿野合作社 · 采收队',
     detail: '采收 500kg 有机番茄，农残快检合格',
+    ipfsOps: [{ text: 'PUT quick_test_result.json → CID: Qm5e6f7g8h' }],
     dbOps: [
-      { type: 'insert', op: 'INSERT', sql: 'trace_records (stage=HARVESTING)' },
+      { type: 'insert', op: 'INSERT', sql: 'trace_records (HARVESTING, TR-002)' },
       { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=HARVESTED' },
-      { type: 'insert', op: 'INSERT', sql: 'blockchain_transactions (AddTraceRecord)' },
+      { type: 'insert', op: 'INSERT', sql: 'audit_logs (BATCH_STATUS_CHANGE)' },
     ],
+    mqOps: [{ event: 'trace.added', route: 'greenchain.events → analytics.q' }],
   },
   process: {
-    icon: '🏭',
-    label: '加工包装',
-    action: 'transferOwnership + addTraceRecord',
+    icon: '🏭', label: '加工包装', action: 'transferOwnership + splitBatch',
     operator: '潍坊绿野加工厂',
     detail: '清洗分拣包装，拆分为 1000 盒 × 500g',
+    ipfsOps: [{ text: 'PUT process_video.mp4 (4.2MB) → CID: Qm9i0j1k2l' }],
     dbOps: [
-      { type: 'insert', op: 'INSERT', sql: 'batch_transfers (from_org → to_org)' },
-      { type: 'insert', op: 'INSERT', sql: 'trace_records (stage=PROCESSING)' },
+      { type: 'insert', op: 'INSERT', sql: 'batch_transfers (farmer→processor)' },
+      { type: 'insert', op: 'INSERT', sql: 'trace_records (PROCESSING)' },
       { type: 'insert', op: 'INSERT', sql: 'product_batches ×1000 (parent_batch_id)' },
-      { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=SPLIT' },
+      { type: 'update', op: 'UPDATE', sql: 'parent SET status=SPLIT' },
     ],
+    mqOps: [{ event: 'batch.split', route: 'greenchain.events → notification.q' }],
   },
   inspect: {
-    icon: '🔬',
-    label: '质量检测',
-    action: 'submitQualityReport',
+    icon: '🔬', label: '质量检测', action: 'submitQualityReport',
     operator: '山东省农产品质量检测中心',
     detail: '农药残留、重金属、微生物检测全部合格',
+    ipfsOps: [{ text: 'PUT quality_report.pdf (520KB) → CID: QmK9p2xRt' }],
     dbOps: [
-      { type: 'insert', op: 'IPFS', sql: 'PUT report.pdf → CID: QmK9p2x...Rt' },
-      { type: 'insert', op: 'INSERT', sql: 'quality_reports (result=PASS)' },
+      { type: 'insert', op: 'INSERT', sql: 'quality_reports (PASS, ORG-2026-SD-0088)' },
       { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=INSPECTED' },
     ],
+    mqOps: [{ event: 'quality.passed', route: 'greenchain.events → analytics.q' }],
   },
   logistics: {
-    icon: '🚚',
-    label: '冷链物流',
-    action: 'addTraceRecord + submitIoTData',
+    icon: '🚚', label: '冷链物流', action: 'addTraceRecord + submitIoTData',
     operator: '顺丰冷链物流',
     detail: '冷链运输至北京，全程温度 2-6°C',
+    ipfsOps: [],
     dbOps: [
-      { type: 'insert', op: 'INSERT', sql: 'iot_sensor_data (temp=4.2, TimescaleDB)' },
-      { type: 'cache', op: 'REDIS', sql: 'HSET iot:latest:DEV-TEMP-001' },
-      { type: 'insert', op: 'INSERT', sql: 'trace_records (stage=LOGISTICS)' },
+      { type: 'insert', op: 'INSERT', sql: 'iot_sensor_data (temp=4.2°C, TimescaleDB)' },
+      { type: 'insert', op: 'INSERT', sql: 'trace_records (LOGISTICS)' },
       { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=IN_TRANSIT' },
     ],
+    mqOps: [{ event: 'trace.added', route: 'greenchain.events → audit.q' }],
   },
   retail: {
-    icon: '🏪',
-    label: '零售上架',
-    action: 'confirmDelivery + generateQRCode',
+    icon: '🏪', label: '零售上架', action: 'confirmDelivery + generateQRCode',
     operator: '北京华联超市朝阳店',
     detail: '确认收货并上架销售，生成消费者溯源二维码',
+    ipfsOps: [],
     dbOps: [
-      { type: 'insert', op: 'INSERT', sql: 'trace_records (stage=RETAIL)' },
+      { type: 'insert', op: 'INSERT', sql: 'trace_records (RETAIL)' },
       { type: 'update', op: 'UPDATE', sql: 'product_batches SET status=ON_SHELF' },
-      { type: 'cache', op: 'REDIS', sql: 'SET trace:query:{batchId} EX 300' },
+      { type: 'cache', op: 'REDIS', sql: 'SET trace:query:GC-TOM-... EX 300' },
+    ],
+    mqOps: [
+      { event: 'batch.on_shelf', route: 'greenchain.events → notification.q' },
+      { event: 'qrcode.generated', route: 'greenchain.events → analytics.q' },
     ],
   },
 };
@@ -244,6 +252,39 @@ function generateHash() {
   hash += '...';
   for (let i = 0; i < 4; i++) hash += chars[Math.floor(Math.random() * 16)];
   return hash;
+}
+
+function appendLogItems(containerId, items, renderFn) {
+  const container = document.getElementById(containerId);
+  if (!container || !items?.length) return;
+  const empty = container.querySelector('.db-log-empty');
+  if (empty) empty.remove();
+  items.forEach((item, i) => {
+    setTimeout(() => {
+      container.appendChild(renderFn(item));
+      container.scrollTop = container.scrollHeight;
+    }, i * 150);
+  });
+}
+
+function addIpfsLogItems(stepKey) {
+  const step = demoSteps[stepKey];
+  appendLogItems('ipfsLog', step.ipfsOps, (op) => {
+    const el = document.createElement('div');
+    el.className = 'db-log-item insert';
+    el.innerHTML = `<div class="db-sql">${op.text}</div>`;
+    return el;
+  });
+}
+
+function addMqLogItems(stepKey) {
+  const step = demoSteps[stepKey];
+  appendLogItems('mqLog', step.mqOps, (op) => {
+    const el = document.createElement('div');
+    el.className = 'db-log-item cache';
+    el.innerHTML = `<div class="db-op">${op.event}</div><div class="db-sql">${op.route}</div>`;
+    return el;
+  });
 }
 
 function addDbLogItems(stepKey) {
@@ -368,8 +409,10 @@ function executeDemoStep() {
   startBtn.textContent = '上链中...';
 
   setTimeout(() => {
-    addBlock(key);
+    addIpfsLogItems(key);
     addDbLogItems(key);
+    addBlock(key);
+    addMqLogItems(key);
     addTraceItem(key);
     demoState.completed.add(key);
     demoState.currentStep++;
@@ -411,6 +454,10 @@ function resetDemo() {
 
   const dbLog = document.getElementById('dbLog');
   if (dbLog) dbLog.innerHTML = '<div class="db-log-empty">等待操作...</div>';
+  const ipfsLog = document.getElementById('ipfsLog');
+  if (ipfsLog) ipfsLog.innerHTML = '<div class="db-log-empty">等待文件上传...</div>';
+  const mqLog = document.getElementById('mqLog');
+  if (mqLog) mqLog.innerHTML = '<div class="db-log-empty">等待事件发布...</div>';
 
   document.getElementById('demoQR').style.display = 'none';
   document.getElementById('demoStartBtn').disabled = false;
@@ -504,10 +551,71 @@ function initScrollAnimations() {
 }
 
 // ============================================
+// 动态加载扩展内容
+// ============================================
+
+async function loadContent(url, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    container.innerHTML = await res.text();
+    container.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const pre = btn.closest('.code-header')?.nextElementSibling?.querySelector('code');
+        if (!pre) return;
+        try {
+          await navigator.clipboard.writeText(pre.textContent);
+          btn.textContent = '已复制 ✓';
+          setTimeout(() => { btn.textContent = '复制'; }, 2000);
+        } catch { /* ignore */ }
+      });
+    });
+  } catch { /* 开发模式下 fetch 失败时静默 */ }
+}
+
+function initExtendedSchemaTabs() {
+  const extraContainer = document.getElementById('database-extra-container');
+  if (!extraContainer) return;
+
+  const sectionMap = {
+    views: ['.db-views', '.db-triggers'],
+    sample: ['.db-sample'],
+    queries: ['.db-queries'],
+    migration: ['.db-migration'],
+  };
+
+  const extraKeys = Object.keys(sectionMap);
+
+  document.querySelectorAll('.schema-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const key = tab.dataset.schema;
+
+      if (extraKeys.includes(key)) {
+        extraContainer.style.display = 'block';
+        extraContainer.querySelectorAll('.db-views, .db-triggers, .db-sample, .db-queries, .db-migration')
+          .forEach(el => { el.style.display = 'none'; });
+        (sectionMap[key] || []).forEach(sel => {
+          const el = extraContainer.querySelector(sel);
+          if (el) el.style.display = 'block';
+        });
+      } else {
+        extraContainer.style.display = 'none';
+      }
+    });
+  });
+
+  extraContainer.querySelectorAll('.db-views, .db-triggers, .db-sample, .db-queries, .db-migration')
+    .forEach(el => { el.style.display = 'none'; });
+  extraContainer.style.display = 'none';
+}
+
+// ============================================
 // 初始化
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initHeroChain();
   initWorkflowTimeline();
   updateDemoUI();
@@ -517,4 +625,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs('.schema-tab', 'schema-', 'schema');
   initTabs('.api-tab', 'api-', 'api');
   initTabs('.api-ex-tab', 'example-', 'example');
+
+  await Promise.all([
+    loadContent('/content/microservices.html', 'microservices-container'),
+    loadContent('/content/database-extra.html', 'database-extra-container'),
+    loadContent('/content/dataflow-extra.html', 'dataflow-extra-container'),
+    loadContent('/content/advanced-sections.html', 'advanced-sections-container'),
+  ]);
+
+  initExtendedSchemaTabs();
 });

@@ -1,0 +1,205 @@
+<!-- 安全设计 -->
+<section class="section" id="security">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">10B · 安全设计</span>
+      <h2>多层安全防护体系</h2>
+      <p>网络层 → 网关层 → 应用层 → 数据层 → 区块链层 五重防护</p>
+    </div>
+
+    <div class="security-layers">
+      <div class="sec-layer">
+        <div class="sec-layer-num">L1</div>
+        <h4>网络层安全</h4>
+        <ul>
+          <li>VPC 私有网络隔离，区块链节点仅内网可达</li>
+          <li>WAF 防护 SQL 注入、XSS、CSRF</li>
+          <li>DDoS 防护（Cloudflare / 阿里云盾）</li>
+          <li>IP 白名单：Fabric Peer 节点间 mTLS 通信</li>
+        </ul>
+      </div>
+      <div class="sec-layer">
+        <div class="sec-layer-num">L2</div>
+        <h4>网关层安全</h4>
+        <ul>
+          <li>Kong JWT 插件验证 + Token 过期检查</li>
+          <li>API 限流：60 req/min（查询）、10 req/min（写入）</li>
+          <li>请求签名验证（IoT 设备 HMAC-SHA256）</li>
+          <li>CORS 白名单 + HTTPS 强制跳转</li>
+        </ul>
+      </div>
+      <div class="sec-layer">
+        <div class="sec-layer-num">L3</div>
+        <h4>应用层安全</h4>
+        <ul>
+          <li>RBAC 角色权限：ADMIN / OPERATOR / VIEWER</li>
+          <li>组织隔离：用户只能操作本组织数据</li>
+          <li>输入校验：参数白名单 + 长度限制</li>
+          <li>敏感操作二次确认（召回、批量删除）</li>
+        </ul>
+      </div>
+      <div class="sec-layer">
+        <div class="sec-layer-num">L4</div>
+        <h4>数据层安全</h4>
+        <ul>
+          <li>密码 bcrypt (cost=12) 存储</li>
+          <li>手机号/身份证 AES-256-GCM 加密</li>
+          <li>数据库连接 SSL + 最小权限账号</li>
+          <li>审计日志不可删除，按月分区归档</li>
+        </ul>
+      </div>
+      <div class="sec-layer">
+        <div class="sec-layer-num">L5</div>
+        <h4>区块链层安全</h4>
+        <ul>
+          <li>Fabric MSP 证书体系，每操作需私钥签名</li>
+          <li>背书策略 2/4 组织签名方可写入</li>
+          <li>Chaincode 沙箱隔离执行</li>
+          <li>合约代码第三方安全审计</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sec-auth-detail">
+      <h3>双重认证流程详解</h3>
+      <pre><code>┌─────────────────────────────────────────────────────────────┐
+│  第一层：应用认证（JWT）                                      │
+│  POST /auth/login → 验证用户名密码(bcrypt)                    │
+│  → 颁发 JWT {user_id, org_id, role, msp_id, exp: 24h}       │
+│  → Redis 存储 session:{user_id}                              │
+├─────────────────────────────────────────────────────────────┤
+│  第二层：区块链认证（Fabric MSP）                              │
+│  上链操作时：                                                 │
+│  → 从用户关联的 fabric_cert 加载证书                          │
+│  → Fabric SDK 使用私钥对交易提案签名                           │
+│  → Peer 节点验证 MSP 身份 + 背书策略                          │
+│  → Orderer 排序 → 写入各节点账本                              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+    </div>
+
+    <div class="sec-rbac">
+      <h3>RBAC 权限矩阵</h3>
+      <div class="tech-table-wrapper">
+        <table class="tech-table rbac-table">
+          <thead>
+            <tr><th>操作</th><th>ADMIN</th><th>OPERATOR</th><th>VIEWER</th><th>REGULATOR</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>创建批次</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+            <tr><td>添加溯源</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+            <tr><td>查看溯源</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+            <tr><td>提交质检</td><td>✅</td><td>✅*</td><td>❌</td><td>❌</td></tr>
+            <tr><td>发起召回</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td></tr>
+            <tr><td>审计日志</td><td>✅</td><td>❌</td><td>❌</td><td>✅</td></tr>
+            <tr><td>用户管理</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">* OPERATOR 仅限本组织类型的操作权限</p>
+    </div>
+  </div>
+</section>
+
+<!-- 测试方案 -->
+<section class="section section-alt" id="testing">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">10C · 测试方案</span>
+      <h2>全链路测试策略</h2>
+      <p>单元测试 → 集成测试 → 合约测试 → E2E 测试 → 性能测试</p>
+    </div>
+
+    <div class="test-pyramid">
+      <div class="test-level" data-level="E2E"><span>端到端测试</span><small>10%</small></div>
+      <div class="test-level" data-level="Integration"><span>集成测试</span><small>30%</small></div>
+      <div class="test-level" data-level="Unit"><span>单元测试</span><small>60%</small></div>
+    </div>
+
+    <div class="test-grid">
+      <div class="test-card">
+        <h4>单元测试（Go testing）</h4>
+        <pre><code>// batch_service_test.go
+func TestCreateBatch_ValidInput(t *testing.T) {
+    svc := NewBatchService(mockDB, mockFabric)
+    req := &CreateBatchRequest{
+        ProductName: "有机番茄",
+        Quantity: 500,
+    }
+    resp, err := svc.CreateBatch(ctx, req)
+    assert.NoError(t, err)
+    assert.Equal(t, "PENDING", resp.ChainStatus)
+}
+
+// 覆盖率目标：核心业务逻辑 ≥ 80%</code></pre>
+      </div>
+      <div class="test-card">
+        <h4>智能合约测试（Fabric Shim Mock）</h4>
+        <pre><code>// batch_contract_test.go
+func TestCreateBatch_DuplicateID(t *testing.T) {
+    ctx := mockStub("FarmerOrgMSP")
+    contract := &BatchContract{}
+    contract.CreateBatch(ctx, "BATCH-001", ...)
+    _, err := contract.CreateBatch(ctx, "BATCH-001", ...)
+    assert.ErrorContains(t, err, "已存在")
+}</code></pre>
+      </div>
+      <div class="test-card">
+        <h4>API 集成测试（Postman / Newman）</h4>
+        <pre><code># 测试集合：greenchain-api-tests
+# 1. 登录获取 Token
+# 2. 创建批次 → 验证 201
+# 3. 轮询批次状态 → 等待 CONFIRMED
+# 4. 添加 6 环节溯源记录
+# 5. 公开查询 → 验证 timeline 长度=6
+# 6. 验证链上哈希一致性</code></pre>
+      </div>
+      <div class="test-card">
+        <h4>E2E 测试场景</h4>
+        <ul>
+          <li>场景1：完整 6 环节溯源 Happy Path</li>
+          <li>场景2：质检不合格 → 批次冻结</li>
+          <li>场景3：温度超标 → 告警 → 上链</li>
+          <li>场景4：监管部门发起召回</li>
+          <li>场景5：批次拆分 → 子批次独立溯源</li>
+          <li>场景6：并发创建 100 批次压力测试</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 性能指标 -->
+<section class="section" id="performance">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">10D · 性能指标</span>
+      <h2>性能基准与优化策略</h2>
+      <p>基于 4C8G 节点压测结果（wrk / k6）</p>
+    </div>
+
+    <div class="perf-metrics">
+      <div class="perf-card"><span class="perf-val">1,200</span><span class="perf-unit">req/s</span><span class="perf-label">溯源查询 QPS</span></div>
+      <div class="perf-card"><span class="perf-val">85</span><span class="perf-unit">TPS</span><span class="perf-label">区块链写入</span></div>
+      <div class="perf-card"><span class="perf-val">45</span><span class="perf-unit">ms</span><span class="perf-label">查询 P50 延迟</span></div>
+      <div class="perf-card"><span class="perf-val">280</span><span class="perf-unit">ms</span><span class="perf-label">写入 P99 延迟</span></div>
+      <div class="perf-card"><span class="perf-val">10K</span><span class="perf-unit">msg/s</span><span class="perf-label">IoT 数据吞吐</span></div>
+      <div class="perf-card"><span class="perf-val">99.95</span><span class="perf-unit">%</span><span class="perf-label">系统可用性 SLA</span></div>
+    </div>
+
+    <div class="perf-optimize">
+      <h3>优化策略</h3>
+      <div class="tech-table-wrapper">
+        <table class="tech-table">
+          <thead><tr><th>瓶颈</th><th>优化手段</th><th>效果</th></tr></thead>
+          <tbody>
+            <tr><td>溯源查询慢</td><td>Redis 缓存 + PostgreSQL 复合索引 + 读写分离</td><td>QPS 200→1200</td></tr>
+            <tr><td>区块链写入慢</td><td>批量提交 + 异步确认 + 链下先写</td><td>P99 800ms→280ms</td></tr>
+            <tr><td>IoT 数据量大</td><td>TimescaleDB 分区 + 降采样 + 异常才上链</td><td>存储降 90%</td></tr>
+            <tr><td>IPFS 上传慢</td><td>MinIO 热存储 + IPFS 异步 Pin</td><td>上传 3s→0.5s</td></tr>
+            <tr><td>跨服务调用</td><td>gRPC 替代 REST + 连接池复用</td><td>延迟降 40%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

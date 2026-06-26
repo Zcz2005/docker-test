@@ -24,14 +24,14 @@
       <ul class="nav-menu" id="navMenu">
         <li><a href="#overview">概述</a></li>
         <li><a href="#architecture">架构</a></li>
+        <li><a href="#microservices">微服务</a></li>
         <li><a href="#database">数据库</a></li>
         <li><a href="#api">API</a></li>
         <li><a href="#dataflow">数据流</a></li>
-        <li><a href="#workflow">业务流程</a></li>
-        <li><a href="#smart-contract">合约</a></li>
+        <li><a href="#workflow">流程</a></li>
+        <li><a href="#security">安全</a></li>
         <li><a href="#deployment">部署</a></li>
         <li><a href="#demo">演示</a></li>
-        <li><a href="#faq">FAQ</a></li>
       </ul>
     </nav>
   </header>
@@ -49,20 +49,20 @@
         </p>
         <div class="hero-stats">
           <div class="stat">
-            <span class="stat-num">13</span>
+            <span class="stat-num">18</span>
             <span class="stat-label">数据库表</span>
           </div>
           <div class="stat">
-            <span class="stat-num">28+</span>
+            <span class="stat-num">45+</span>
             <span class="stat-label">API 接口</span>
           </div>
           <div class="stat">
-            <span class="stat-num">5</span>
-            <span class="stat-label">存储引擎</span>
+            <span class="stat-num">7</span>
+            <span class="stat-label">微服务</span>
           </div>
           <div class="stat">
-            <span class="stat-num">&lt;3s</span>
-            <span class="stat-label">溯源查询响应</span>
+            <span class="stat-num">16</span>
+            <span class="stat-label">Docker 服务</span>
           </div>
         </div>
         <div class="hero-actions">
@@ -584,6 +584,9 @@
       </div>
     </section>
 
+    <!-- 微服务 + 状态机（动态加载） -->
+    <div id="microservices-container"></div>
+
     <!-- 数据库设计 -->
     <section class="section" id="database">
       <div class="container">
@@ -604,7 +607,7 @@
               <li>质检报告、召回记录、审计日志</li>
               <li>区块链交易同步表</li>
             </ul>
-            <span class="storage-badge">13 张核心表</span>
+            <span class="storage-badge">18 张核心表</span>
           </div>
           <div class="storage-card">
             <div class="storage-icon">📊</div>
@@ -693,6 +696,10 @@
             <button class="schema-tab" data-schema="chain">链同步表</button>
             <button class="schema-tab" data-schema="iot">IoT 时序表</button>
             <button class="schema-tab" data-schema="redis">Redis 设计</button>
+            <button class="schema-tab" data-schema="views">视图/触发器</button>
+            <button class="schema-tab" data-schema="sample">示例数据</button>
+            <button class="schema-tab" data-schema="queries">业务查询</button>
+            <button class="schema-tab" data-schema="migration">迁移策略</button>
           </div>
           <div class="schema-panels">
             <div class="schema-panel active" id="schema-core">
@@ -1061,6 +1068,9 @@ CREATE TABLE iot_devices (
           </div>
         </div>
 
+        <!-- 数据库扩展内容（视图/触发器/示例/查询/迁移） -->
+        <div id="database-extra-container"></div>
+
         <!-- 数据存储策略 -->
         <div class="storage-strategy">
           <h3>链上 vs 链下存储决策矩阵</h3>
@@ -1130,7 +1140,7 @@ CREATE TABLE iot_devices (
         <div class="section-header">
           <span class="section-tag">06 · API 接口</span>
           <h2>RESTful API 接口设计</h2>
-          <p>28+ 接口覆盖认证、批次、溯源、质检、IoT、查询全业务场景</p>
+          <p>45+ 接口覆盖认证、批次、溯源、质检、IoT、管理后台、Webhook 全场景</p>
         </div>
 
         <!-- 认证流程 -->
@@ -1158,7 +1168,8 @@ CREATE TABLE iot_devices (
             <button class="api-tab" data-api="trace">溯源</button>
             <button class="api-tab" data-api="quality">质检</button>
             <button class="api-tab" data-api="iot">IoT</button>
-            <button class="api-tab" data-api="query">查询</button>
+            <button class="api-tab" data-api="admin">管理后台</button>
+            <button class="api-tab" data-api="webhook">Webhook</button>
           </div>
           <div class="api-panels">
             <div class="api-panel active" id="api-auth">
@@ -1219,6 +1230,38 @@ CREATE TABLE iot_devices (
                   <tr><td><span class="method get">GET</span></td><td>/api/v1/iot/alerts</td><td>温湿度异常告警列表</td><td>LOGISTICS</td></tr>
                 </tbody>
               </table>
+            </div>
+            <div class="api-panel" id="api-admin">
+              <table class="api-table">
+                <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>权限</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/admin/organizations</td><td>组织列表</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/admin/organizations</td><td>创建组织</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/admin/users</td><td>用户列表</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/admin/users</td><td>创建用户</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/admin/dashboard/stats</td><td>仪表盘统计</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/admin/chain/status</td><td>区块链网络状态</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/admin/chain/pending-tx</td><td>待确认交易</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method post">POST</span></td><td>/api/v1/admin/chain/retry/{txId}</td><td>重试失败交易</td><td>ADMIN</td></tr>
+                  <tr><td><span class="method get">GET</span></td><td>/api/v1/admin/system/health</td><td>系统健康检查</td><td>ADMIN</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="api-panel" id="api-webhook">
+              <table class="api-table">
+                <thead><tr><th>事件</th><th>触发时机</th><th>Payload 关键字段</th></tr></thead>
+                <tbody>
+                  <tr><td><code>batch.created</code></td><td>批次创建并上链后</td><td>batchId, orgId, productName</td></tr>
+                  <tr><td><code>chain.tx.committed</code></td><td>链上交易确认后</td><td>txId, blockNumber, refId</td></tr>
+                  <tr><td><code>trace.added</code></td><td>溯源记录添加后</td><td>recordId, batchId, stage</td></tr>
+                  <tr><td><code>iot.alert</code></td><td>IoT 温度/湿度异常</td><td>batchId, alertType, value, deviceId</td></tr>
+                  <tr><td><code>recall.initiated</code></td><td>监管部门发起召回</td><td>batchId, reason, affectedCount</td></tr>
+                  <tr><td><code>quality.failed</code></td><td>质检不合格</td><td>batchId, reportId, testItems</td></tr>
+                </tbody>
+              </table>
+              <div class="api-flow-note" style="margin-top:16px">
+                <strong>Webhook 配置：</strong>每个组织可在管理后台配置 callback URL + HMAC 签名密钥。平台发送 POST 请求，Header 含 <code>X-GreenChain-Signature: sha256=...</code>，接收方验证签名后处理。
+              </div>
             </div>
             <div class="api-panel" id="api-query">
               <table class="api-table">
@@ -1544,6 +1587,9 @@ Content-Type: application/json
             </div>
           </div>
         </div>
+
+        <!-- 额外数据流时序图 -->
+        <div id="dataflow-extra-container"></div>
       </div>
     </section>
 
@@ -2179,6 +2225,60 @@ func (c *AccessContract) InitiateRecall(
           </div>
         </div>
 
+        <div class="deploy-compose">
+          <h3>📄 docker-compose.yml 核心配置</h3>
+          <div class="code-header"><span>docker-compose.yml</span><button class="copy-btn" data-copy="docker-compose">复制</button></div>
+          <pre><code id="code-docker-compose">version: '3.8'
+services:
+  api-gateway:
+    image: kong:3.4
+    ports: ["8000:8000", "8443:8443"]
+    depends_on: [batch-service, trace-service, query-service]
+
+  auth-service:
+    build: ./services/auth
+    ports: ["8080:8080"]
+    environment:
+      DB_HOST: postgresql
+      REDIS_URL: redis://redis:6379
+
+  batch-service:
+    build: ./services/batch
+    ports: ["8081:8081"]
+    environment:
+      DB_HOST: postgresql
+      FABRIC_PEER: peer0.farmer.greenchain.com:7051
+      RABBITMQ_URL: amqp://rabbitmq:5672
+
+  postgresql:
+    image: postgres:15-alpine
+    ports: ["5432:5432"]
+    volumes:
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    ports: ["5433:5432"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports: ["5672:5672", "15672:15672"]
+
+  emqx:
+    image: emqx:5
+    ports: ["1883:1883"]
+
+  ipfs:
+    image: ipfs/kubo:latest
+    ports: ["5001:5001"]
+
+  # ... 完整配置见项目根目录 docker-compose.yml（16 个服务）</code></pre>
+        </div>
+
         <div class="ops-section">
           <h3>🛡️ 运维保障</h3>
           <div class="ops-grid">
@@ -2213,6 +2313,9 @@ func (c *AccessContract) InitiateRecall(
         </div>
       </div>
     </section>
+
+    <!-- 安全/测试/性能（动态加载） -->
+    <div id="advanced-sections-container"></div>
 
     <!-- 交互演示 -->
     <section class="section" id="demo">
@@ -2267,8 +2370,20 @@ func (c *AccessContract) InitiateRecall(
           </div>
 
           <div class="demo-visualization">
-            <h3>区块链账本 + 数据库双写视图</h3>
-            <div class="demo-dual-view">
+            <h3>全链路四面板实时视图</h3>
+            <div class="demo-quad-view">
+              <div class="demo-view-panel">
+                <h4>📁 IPFS 存储</h4>
+                <div class="ipfs-log" id="ipfsLog">
+                  <div class="db-log-empty">等待文件上传...</div>
+                </div>
+              </div>
+              <div class="demo-view-panel">
+                <h4>🐘 PostgreSQL</h4>
+                <div class="db-log" id="dbLog">
+                  <div class="db-log-empty">等待操作...</div>
+                </div>
+              </div>
               <div class="demo-view-panel">
                 <h4>⛓️ 区块链账本</h4>
                 <div class="blockchain-ledger" id="blockchainLedger">
@@ -2291,16 +2406,16 @@ func (c *AccessContract) InitiateRecall(
                 </div>
               </div>
               <div class="demo-view-panel">
-                <h4>🐘 PostgreSQL 操作日志</h4>
-                <div class="db-log" id="dbLog">
-                  <div class="db-log-empty">等待操作...</div>
+                <h4>📨 RabbitMQ 事件</h4>
+                <div class="mq-log" id="mqLog">
+                  <div class="db-log-empty">等待事件发布...</div>
                 </div>
               </div>
             </div>
 
             <div class="demo-trace-timeline" id="demoTraceTimeline">
               <h4>溯源时间线</h4>
-              <div class="trace-empty">点击左侧按钮开始模拟完整数据流（IPFS → DB → 区块链 → 缓存）</div>
+              <div class="trace-empty">点击左侧按钮模拟完整数据流：IPFS → PostgreSQL → Fabric → RabbitMQ → Redis</div>
             </div>
           </div>
         </div>
