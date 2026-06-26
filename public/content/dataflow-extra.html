@@ -1,0 +1,104 @@
+<!-- 额外数据流时序图 -->
+<div class="dataflow-extra">
+
+  <div class="sequence-diagram">
+    <h3>时序图：批次拆分流程</h3>
+    <div class="sequence-visual">
+      <div class="seq-participants">
+        <span>加工厂</span><span>批次服务</span><span>PostgreSQL</span><span>Fabric</span><span>消息队列</span>
+      </div>
+      <div class="seq-messages">
+        <div class="seq-msg"><span class="seq-from">加工厂</span><span class="seq-arrow">── POST /batches/{id}/split ──→</span><span class="seq-to">批次服务</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── 校验父批次 status=PROCESSING ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── BEGIN TRANSACTION ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── UPDATE parent SET status=SPLIT ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── INSERT 1000 child batches ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── COMMIT ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── SplitBatch(parent, children[]) ──→</span><span class="seq-to">Fabric</span></div>
+        <div class="seq-msg async"><span class="seq-from">批次服务</span><span class="seq-arrow">·· PUBLISH batch.split ··→</span><span class="seq-to">消息队列</span></div>
+        <div class="seq-msg return"><span class="seq-from">批次服务</span><span class="seq-arrow">←── 201 {parentId, childIds[]} ──</span><span class="seq-to">加工厂</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sequence-diagram">
+    <h3>时序图：IoT 温度异常告警</h3>
+    <div class="sequence-visual">
+      <div class="seq-participants">
+        <span>传感器</span><span>EMQX</span><span>IoT服务</span><span>TimescaleDB</span><span>Fabric</span><span>告警服务</span>
+      </div>
+      <div class="seq-messages">
+        <div class="seq-msg"><span class="seq-from">传感器</span><span class="seq-arrow">── MQTT temp=9.5°C ──→</span><span class="seq-to">EMQX</span></div>
+        <div class="seq-msg"><span class="seq-from">EMQX</span><span class="seq-arrow">── 转发消息 ──→</span><span class="seq-to">IoT服务</span></div>
+        <div class="seq-msg"><span class="seq-from">IoT服务</span><span class="seq-arrow">── INSERT sensor_data ──→</span><span class="seq-to">TimescaleDB</span></div>
+        <div class="seq-msg"><span class="seq-from">IoT服务</span><span class="seq-arrow">── 检测: 9.5 > 8.0 阈值 ──→</span><span class="seq-to">IoT服务</span></div>
+        <div class="seq-msg"><span class="seq-from">IoT服务</span><span class="seq-arrow">── SubmitIoTData + Alert ──→</span><span class="seq-to">Fabric</span></div>
+        <div class="seq-msg async"><span class="seq-from">IoT服务</span><span class="seq-arrow">·· PUBLISH iot.alert ··→</span><span class="seq-to">告警服务</span></div>
+        <div class="seq-msg"><span class="seq-from">告警服务</span><span class="seq-arrow">── 短信+APP推送 通知物流方 ──→</span><span class="seq-to">告警服务</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sequence-diagram">
+    <h3>时序图：产品召回流程</h3>
+    <div class="sequence-visual">
+      <div class="seq-participants">
+        <span>监管部门</span><span>批次服务</span><span>PostgreSQL</span><span>Fabric</span><span>通知服务</span><span>零售商</span>
+      </div>
+      <div class="seq-messages">
+        <div class="seq-msg"><span class="seq-from">监管部门</span><span class="seq-arrow">── POST /batches/{id}/recall ──→</span><span class="seq-to">批次服务</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── 验证 REGULATOR 权限 ──→</span><span class="seq-to">批次服务</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── 递归查询所有子批次 ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── InitiateRecall(batchId, reason) ──→</span><span class="seq-to">Fabric</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── UPDATE status=RECALLED (批量) ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg"><span class="seq-from">批次服务</span><span class="seq-arrow">── INSERT recall_records ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg async"><span class="seq-from">Fabric</span><span class="seq-arrow">·· Event: ProductRecall ··→</span><span class="seq-to">通知服务</span></div>
+        <div class="seq-msg"><span class="seq-from">通知服务</span><span class="seq-arrow">── 通知所有下游组织下架 ──→</span><span class="seq-to">零售商</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sequence-diagram">
+    <h3>时序图：用户登录认证</h3>
+    <div class="sequence-visual">
+      <div class="seq-participants">
+        <span>客户端</span><span>API网关</span><span>Auth服务</span><span>PostgreSQL</span><span>Redis</span>
+      </div>
+      <div class="seq-messages">
+        <div class="seq-msg"><span class="seq-from">客户端</span><span class="seq-arrow">── POST /auth/login {user,pass} ──→</span><span class="seq-to">API网关</span></div>
+        <div class="seq-msg"><span class="seq-from">Auth服务</span><span class="seq-arrow">── SELECT user WHERE username ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg"><span class="seq-from">Auth服务</span><span class="seq-arrow">── bcrypt.Compare(password) ──→</span><span class="seq-to">Auth服务</span></div>
+        <div class="seq-msg"><span class="seq-from">Auth服务</span><span class="seq-arrow">── 生成 JWT (HS256, 24h) ──→</span><span class="seq-to">Auth服务</span></div>
+        <div class="seq-msg"><span class="seq-from">Auth服务</span><span class="seq-arrow">── SET session:{userId} ──→</span><span class="seq-to">Redis</span></div>
+        <div class="seq-msg"><span class="seq-from">Auth服务</span><span class="seq-arrow">── INSERT audit_logs(LOGIN) ──→</span><span class="seq-to">PostgreSQL</span></div>
+        <div class="seq-msg return"><span class="seq-from">Auth服务</span><span class="seq-arrow">←── 200 {token, user, org} ──</span><span class="seq-to">客户端</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="data-consistency">
+    <h3>链上链下数据一致性保障</h3>
+    <div class="consistency-flow">
+      <div class="consistency-step">
+        <span class="cs-num">1</span>
+        <div><strong>先写链下（PENDING）</strong><p>业务数据先写入 PostgreSQL，chain_status=PENDING，保证服务不阻塞</p></div>
+      </div>
+      <div class="consistency-step">
+        <span class="cs-num">2</span>
+        <div><strong>异步提交上链</strong><p>通过 Fabric SDK 提交交易，记录 blockchain_transactions</p></div>
+      </div>
+      <div class="consistency-step">
+        <span class="cs-num">3</span>
+        <div><strong>事件驱动确认</strong><p>chain-sync-service 监听 BlockCommitted 事件，更新 CONFIRMED</p></div>
+      </div>
+      <div class="consistency-step">
+        <span class="cs-num">4</span>
+        <div><strong>超时补偿</strong><p>30s 未确认 → 标记 FAILED → 定时任务重试（最多 3 次）</p></div>
+      </div>
+      <div class="consistency-step">
+        <span class="cs-num">5</span>
+        <div><strong>定时校验</strong><p>每小时运行一致性检查 SQL，发现不一致触发告警</p></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,150 @@
+<!-- 微服务架构详细设计 -->
+<section class="section section-alt" id="microservices">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">04B · 微服务架构</span>
+      <h2>7 大微服务拆分与通信</h2>
+      <p>按业务域拆分，通过 API 网关 + 消息队列实现松耦合协作</p>
+    </div>
+
+    <div class="microservice-grid">
+      <div class="ms-card">
+        <div class="ms-header"><span>🔐</span><h4>auth-service</h4><span class="ms-port">:8080</span></div>
+        <p>用户认证、JWT 颁发、Fabric 证书管理、RBAC 权限</p>
+        <div class="ms-deps">PostgreSQL · Redis</div>
+        <div class="ms-apis">4 接口 · 登录/登出/刷新/Profile</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-header"><span>📦</span><h4>batch-service</h4><span class="ms-port">:8081</span></div>
+        <p>批次 CRUD、拆分合并、所有权转移、状态机流转</p>
+        <div class="ms-deps">PostgreSQL · Fabric SDK · RabbitMQ</div>
+        <div class="ms-apis">8 接口 · 核心写服务</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-header"><span>🔗</span><h4>trace-service</h4><span class="ms-port">:8082</span></div>
+        <p>溯源记录添加、附件上传、链上哈希验证</p>
+        <div class="ms-deps">PostgreSQL · IPFS · Fabric SDK</div>
+        <div class="ms-apis">6 接口</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-header"><span>🔍</span><h4>query-service</h4><span class="ms-port">:8083</span></div>
+        <p>溯源聚合查询、缓存管理、二维码生成、公开 API</p>
+        <div class="ms-deps">PostgreSQL · Redis · Fabric SDK · IPFS</div>
+        <div class="ms-apis">5 接口 · 读优化</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-header"><span>📡</span><h4>iot-service</h4><span class="ms-port">:8084</span></div>
+        <p>MQTT 接入、时序数据写入、异常检测、告警触发</p>
+        <div class="ms-deps">TimescaleDB · Redis · EMQX · RabbitMQ</div>
+        <div class="ms-apis">5 接口 + MQTT 订阅</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-header"><span>🔬</span><h4>quality-service</h4><span class="ms-port">:8085</span></div>
+        <p>质检报告提交、认证机构白名单、报告哈希验证</p>
+        <div class="ms-deps">PostgreSQL · IPFS · Fabric SDK</div>
+        <div class="ms-apis">5 接口</div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-header"><span>⛓️</span><h4>chain-sync-service</h4><span class="ms-port">:8086</span></div>
+        <p>监听 Fabric 区块事件、同步链上状态、处理待确认交易</p>
+        <div class="ms-deps">PostgreSQL · Fabric Event Hub · RabbitMQ</div>
+        <div class="ms-apis">内部服务 · 无对外 API</div>
+      </div>
+    </div>
+
+    <div class="ms-communication">
+      <h3>服务间通信方式</h3>
+      <div class="tech-table-wrapper">
+        <table class="tech-table">
+          <thead><tr><th>通信场景</th><th>方式</th><th>协议</th><th>示例</th></tr></thead>
+          <tbody>
+            <tr><td>前端 → 后端</td><td>同步</td><td>HTTPS REST</td><td>POST /api/v1/batches</td></tr>
+            <tr><td>服务 → 服务（查询）</td><td>同步</td><td>gRPC</td><td>batch-service → query-service 缓存失效</td></tr>
+            <tr><td>写操作 → 异步处理</td><td>异步</td><td>RabbitMQ</td><td>batch.created → notification-service</td></tr>
+            <tr><td>IoT 数据接入</td><td>异步</td><td>MQTT</td><td>iot/greenchain/device/+/data</td></tr>
+            <tr><td>链上事件</td><td>异步</td><td>Fabric Block Events</td><td>BlockCommitted → chain-sync-service</td></tr>
+            <tr><td>文件存储</td><td>同步</td><td>HTTP IPFS API</td><td>PUT /api/v0/add</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="ms-grpc">
+      <h3>gRPC 内部接口示例</h3>
+      <pre><code>// proto/batch.proto
+service BatchService {
+  rpc GetBatch(GetBatchRequest) returns (BatchResponse);
+  rpc InvalidateCache(InvalidateRequest) returns (Empty);
+  rpc CheckOwnership(OwnershipRequest) returns (OwnershipResponse);
+}
+
+message BatchResponse {
+  string batch_id = 1;
+  string status = 2;
+  string chain_status = 3;
+  int64 org_id = 4;
+}
+
+// query-service 调用 batch-service 验证批次存在性
+// batch-service 调用 query-service 清除缓存</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- 批次状态机 -->
+<section class="section" id="state-machine">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">08B · 状态机</span>
+      <h2>产品批次生命周期状态机</h2>
+      <p>10 种状态、18 种合法转换，由数据库约束 + 智能合约双重保障</p>
+    </div>
+
+    <div class="state-machine-visual">
+      <div class="sm-states">
+        <div class="sm-state start">CREATED<br/><small>创建</small></div>
+        <div class="sm-arrow">→</div>
+        <div class="sm-state">PLANTED<br/><small>种植中</small></div>
+        <div class="sm-arrow">→</div>
+        <div class="sm-state">HARVESTED<br/><small>已采收</small></div>
+        <div class="sm-arrow">→</div>
+        <div class="sm-state">PROCESSING<br/><small>加工中</small></div>
+        <div class="sm-arrow">→</div>
+        <div class="sm-state">INSPECTED<br/><small>已质检</small></div>
+        <div class="sm-arrow">→</div>
+        <div class="sm-state">IN_TRANSIT<br/><small>运输中</small></div>
+        <div class="sm-arrow">→</div>
+        <div class="sm-state">ON_SHELF<br/><small>已上架</small></div>
+        <div class="sm-arrow">→</div>
+        <div class="sm-state end">SOLD<br/><small>已售出</small></div>
+      </div>
+      <div class="sm-branches">
+        <div class="sm-branch"><span class="sm-branch-label">任意环节</span> → <span class="sm-state danger">RECALLED 召回</span></div>
+        <div class="sm-branch"><span class="sm-branch-label">加工环节</span> → <span class="sm-state">SPLIT 已拆分</span> → 子批次 CREATED</div>
+        <div class="sm-branch"><span class="sm-branch-label">质检不合格</span> → <span class="sm-state danger">FROZEN 冻结</span></div>
+      </div>
+    </div>
+
+    <div class="sm-rules">
+      <h3>状态转换规则表</h3>
+      <div class="tech-table-wrapper">
+        <table class="tech-table">
+          <thead><tr><th>当前状态</th><th>允许操作</th><th>目标状态</th><th>权限</th><th>上链</th></tr></thead>
+          <tbody>
+            <tr><td>—</td><td>createBatch</td><td>CREATED</td><td>FARMER</td><td>✅</td></tr>
+            <tr><td>CREATED</td><td>addTrace(PLANTING)</td><td>PLANTED</td><td>FARMER</td><td>✅</td></tr>
+            <tr><td>PLANTED</td><td>addTrace(HARVESTING)</td><td>HARVESTED</td><td>FARMER</td><td>✅</td></tr>
+            <tr><td>HARVESTED</td><td>transfer + addTrace(PROCESSING)</td><td>PROCESSING</td><td>PROCESSOR</td><td>✅</td></tr>
+            <tr><td>PROCESSING</td><td>splitBatch</td><td>SPLIT</td><td>PROCESSOR</td><td>✅</td></tr>
+            <tr><td>PROCESSING</td><td>submitQualityReport(PASS)</td><td>INSPECTED</td><td>INSPECTOR</td><td>✅</td></tr>
+            <tr><td>PROCESSING</td><td>submitQualityReport(FAIL)</td><td>FROZEN</td><td>INSPECTOR</td><td>✅</td></tr>
+            <tr><td>INSPECTED</td><td>addTrace(LOGISTICS)</td><td>IN_TRANSIT</td><td>LOGISTICS</td><td>✅</td></tr>
+            <tr><td>IN_TRANSIT</td><td>addTrace(RETAIL)</td><td>ON_SHELF</td><td>RETAILER</td><td>✅</td></tr>
+            <tr><td>ON_SHELF</td><td>confirmSale</td><td>SOLD</td><td>RETAILER</td><td>❌</td></tr>
+            <tr><td>任意</td><td>initiateRecall</td><td>RECALLED</td><td>REGULATOR</td><td>✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

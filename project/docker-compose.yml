@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: greenchain-db
+    environment:
+      POSTGRES_DB: greenchain
+      POSTGRES_USER: greenchain
+      POSTGRES_PASSWORD: greenchain123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greenchain"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 区块链溯源 API 服务
+  api:
+    build: ./backend
+    container_name: greenchain-api
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: greenchain
+      DB_USER: greenchain
+      DB_PASSWORD: greenchain123
+      MINING_DIFFICULTY: 2
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
