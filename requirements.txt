@@ -1,0 +1,8 @@
+requests>=2.28.0
+urllib3>=1.26.0
+PyMySQL>=1.0.0
+python-dotenv>=1.0.0
+
+# CTyun OOS/ZOS SDK must be installed offline from the official SDK package.
+# Download from: https://www.ctyun.cn/document/10026735/10110276
+# Then run: pip install -r sdk/requirements.txt && sh sdk/install_extension.sh
