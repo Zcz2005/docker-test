@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GreenChain 区块链溯源学习平台</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="header">
+    <h1>⛓️ GreenChain 区块链溯源</h1>
+    <p>可部署学习项目 · 数据库 + 区块链双写</p>
+  </header>
+
+  <main class="container">
+    <!-- 统计面板 -->
+    <section class="stats" id="stats">
+      <div class="stat-card"><span class="num" id="statBatches">-</span><span class="label">产品批次</span></div>
+      <div class="stat-card"><span class="num" id="statTraces">-</span><span class="label">溯源记录</span></div>
+      <div class="stat-card"><span class="num" id="statBlocks">-</span><span class="label">区块数量</span></div>
+      <div class="stat-card valid" id="statValid"><span class="num" id="statChainValid">-</span><span class="label">链完整性</span></div>
+    </section>
+
+    <div class="grid">
+      <!-- 左侧：操作 -->
+      <section class="panel">
+        <h2>📦 创建产品批次</h2>
+        <form id="batchForm">
+          <label>产品名称<input name="productName" value="有机番茄" required /></label>
+          <label>类别<input name="category" value="蔬菜" /></label>
+          <label>数量<input name="quantity" type="number" value="100" required /></label>
+          <label>单位<input name="unit" value="kg" /></label>
+          <label>操作人<input name="operator" value="张农户" /></label>
+          <label>描述<textarea name="description">区块链学习用批次</textarea></label>
+          <button type="submit" class="btn primary">创建并上链</button>
+        </form>
+
+        <h2>🔗 添加溯源记录</h2>
+        <form id="traceForm">
+          <label>批次 ID<input name="batchId" id="traceBatchId" placeholder="创建后自动填入" required /></label>
+          <label>环节
+            <select name="stage">
+              <option value="PLANTING">种植 PLANTING</option>
+              <option value="HARVESTING">采收 HARVESTING</option>
+              <option value="PROCESSING">加工 PROCESSING</option>
+              <option value="INSPECTION">质检 INSPECTION</option>
+              <option value="LOGISTICS">物流 LOGISTICS</option>
+              <option value="RETAIL">零售 RETAIL</option>
+            </select>
+          </label>
+          <label>操作描述<input name="action" value="完成种植登记" required /></label>
+          <label>操作人<input name="operator" value="张农户" /></label>
+          <label>地点<input name="location" value="山东寿光" /></label>
+          <button type="submit" class="btn primary">添加并上链</button>
+        </form>
+
+        <h2>🔍 溯源查询</h2>
+        <form id="queryForm" class="query-row">
+          <input name="batchId" id="queryBatchId" placeholder="输入批次 ID" />
+          <button type="submit" class="btn">查询</button>
+        </form>
+        <div id="queryResult"></div>
+      </section>
+
+      <!-- 右侧：区块链可视化 -->
+      <section class="panel chain-panel">
+        <div class="panel-header">
+          <h2>⛓️ 区块链账本</h2>
+          <button class="btn small" id="refreshChain">刷新</button>
+        </div>
+        <div id="chainList" class="chain-list"></div>
+      </section>
+    </div>
+
+    <!-- 批次列表 -->
+    <section class="panel">
+      <h2>📋 所有批次</h2>
+      <table id="batchTable">
+        <thead><tr><th>批次 ID</th><th>产品</th><th>数量</th><th>状态</th><th>操作人</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>GreenChain 区块链学习项目 · PostgreSQL + SHA256 区块链 · <a href="/api/chain/verify" target="_blank">验证链</a></p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
