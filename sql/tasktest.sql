@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `tasktest` (
   `videopath` VARCHAR(1024) DEFAULT NULL COMMENT 'Absolute path to recorded video file',
   `start_time` DATETIME DEFAULT NULL COMMENT 'Screen recording start time',
   `end_time` DATETIME DEFAULT NULL COMMENT 'Screen recording end time',
+  `record_duration` INT DEFAULT NULL COMMENT 'Optional per-task recording duration override in seconds',
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Row creation time',
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Row update time',
   PRIMARY KEY (`id`),

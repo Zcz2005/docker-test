@@ -15,6 +15,10 @@
 | 终态处理 | 任务已结束/不存在时仍标记 `upload=1`，避免死循环重试 |
 | ZOS 兼容 | 内置 `huanan2.zos.ctyun.cn` endpoint region 解析补丁 |
 
+此外包含 **`scrcpy_manager`** 录屏执行服务：通过 ADB + scrcpy 在 Android 设备上执行各平台直播 App 任务并录屏，回写 `tasktest.complete=1`。与上传服务通过数据库解耦。
+
+端到端流程见 [docs/DATA_FLOW.md](docs/DATA_FLOW.md)。
+
 ---
 
 ## 目录结构

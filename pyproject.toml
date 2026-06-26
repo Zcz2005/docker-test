@@ -17,9 +17,10 @@ dependencies = [
 
 [project.scripts]
 southnotary-uploader = "southnotary_uploader.cli:main"
+scrcpy-manager = "scrcpy_manager.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["southnotary_uploader*"]
+include = ["southnotary_uploader*", "scrcpy_manager*"]
 
 [tool.unittest]
 start-dir = "tests"
