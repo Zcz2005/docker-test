@@ -1,0 +1,45 @@
+[paths]
+adb = /usr/bin/adb
+scrcpy = /usr/bin/scrcpy
+logs = ./logs
+recordings = ./recordings
+
+[devices]
+network_range = 192.168.31.
+ports = 5555
+manual_devices =
+timeout = 0.5
+scan_workers = 64
+
+[recording]
+max_size = 1080
+video_bit = 2M
+max_fps = 30
+duration = 320
+audio_bit = 320K
+audio_source = output
+audio_codec = aac
+boost_volume = true
+volume_boost = 3.0
+max_retries = 3
+
+[tasks]
+target_apps = Ailiao,Baobao,Kuaishou,Kelakela,Yingke,Xiuse
+
+[system]
+check_interval = 6
+error_wait = 10
+log_cleanup_interval = 3600
+log_update_interval = 3600
+log_retention_days = 7
+recording_retention_days = 5
+domain_id = southnotary
+allow_mock_tasks = false
+
+[database]
+host = 127.0.0.1
+port = 3306
+user = replace-with-user
+password = replace-with-password
+database = replace-with-database
+charset = utf8mb4

@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""Compatibility entrypoint — delegates to root single-file uploader."""
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from oos_uploader_southnotary import main
+
+if __name__ == "__main__":
+    main()

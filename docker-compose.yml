@@ -1,0 +1,32 @@
+services:
+  southnotary-uploader:
+    build: .
+    container_name: southnotary-uploader
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      # Mount the directory that contains recorded videos on the host.
+      - /data/recordings:/data/recordings:ro
+    # Uncomment if MySQL runs in another compose service.
+    # depends_on:
+    #   - mysql
+
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: southnotary-mysql
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: change-me
+  #     MYSQL_DATABASE: southnotary
+  #     MYSQL_USER: southnotary
+  #     MYSQL_PASSWORD: change-me
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #     - ./sql/tasktest.sql:/docker-entrypoint-initdb.d/01-tasktest.sql:ro
+
+# volumes:
+#   mysql_data:

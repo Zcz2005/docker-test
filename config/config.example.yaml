@@ -1,0 +1,19 @@
+# Optional YAML reference config (not loaded automatically).
+# The service reads environment variables; this file documents defaults.
+
+domain_id: southnotary
+base_url: https://www.southnotary.cn/api
+api_host: www.southnotary.cn
+
+storage:
+  endpoint: https://huanan2.zos.ctyun.cn
+  bucket: bucket-azy-southnotary
+  object_key_prefix: evidenceProd/Casefile/File
+
+runtime:
+  evidence_fetch_interval_seconds: 10
+  upload_interval_seconds: 10
+  http_timeout_seconds: 30
+  api_retry_count: 3
+  api_retry_backoff_seconds: 1.0
+  log_level: INFO
