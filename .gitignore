@@ -26,5 +26,6 @@ logs/
 .DS_Store
 Thumbs.db
 
-# SDK (offline install)
-sdk/
+# SDK (offline install) - keep README, ignore SDK binaries
+sdk/*
+!sdk/README.md
