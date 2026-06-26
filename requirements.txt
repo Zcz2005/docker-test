@@ -1,5 +1,6 @@
 # The CTYun OOS SDK that provides the `oos` and `ooscore` modules is distributed
 # by CTYun as a zip/source package. Install it separately with its setup.py.
-requests
-urllib3
-PyMySQL
+requests>=2.31.0
+urllib3>=2.0.0
+PyMySQL>=1.1.0
+python-dotenv>=1.0.0

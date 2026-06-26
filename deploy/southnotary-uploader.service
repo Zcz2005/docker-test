@@ -1,0 +1,23 @@
+[Unit]
+Description=Southnotary Evidence Polling and OOS Upload Service
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=southnotary
+Group=southnotary
+WorkingDirectory=/opt/southnotary-uploader
+EnvironmentFile=/etc/southnotary-uploader/env
+ExecStart=/opt/southnotary-uploader/.venv/bin/python -m southnotary_uploader
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+KillSignal=SIGINT
+
+# Hardening (adjust if your environment requires broader access)
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

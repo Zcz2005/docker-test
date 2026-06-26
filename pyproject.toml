@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "southnotary-uploader"
+version = "1.0.0"
+description = "Southnotary evidence polling and CTYun OOS/ZOS upload service"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "requests>=2.31.0",
+  "urllib3>=2.0.0",
+  "PyMySQL>=1.1.0",
+  "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+southnotary-uploader = "southnotary_uploader.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["southnotary_uploader*"]
+
+[tool.unittest]
+start-dir = "tests"

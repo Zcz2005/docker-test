@@ -26,6 +26,7 @@ class MySQLConnector:
             charset=self.config.charset,
             cursorclass=DictCursor,
             autocommit=False,
+            connect_timeout=self.config.connect_timeout_seconds,
         )
         return self
 

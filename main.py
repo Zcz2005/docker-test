@@ -1,5 +1,5 @@
-from southnotary_uploader.__main__ import main
+from southnotary_uploader.cli import main
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
