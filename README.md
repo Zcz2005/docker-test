@@ -2,7 +2,21 @@
 
 南方公证处（`www.southnotary.cn`）自动取证任务同步 + 天翼云 OOS/ZOS 视频上传服务。
 
-本项目将你提供的**原始单文件 Python 脚本**重构为可部署、可维护、可诊断的完整服务项目，保留全部核心业务逻辑：
+## 三种启动方式
+
+| 方式 | 命令 | 说明 |
+|------|------|------|
+| **单文件（推荐，等同原始脚本）** | `python oos_uploader_southnotary.py` | 根目录单文件，结构与原脚本一致 |
+| 模块化包 | `python -m southnotary_uploader` | 带 doctor、重试、更细配置 |
+| 启动脚本 | `./scripts/run_uploader.sh` | 自动加载 `.env` 后运行单文件版 |
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入公证处 API 凭证、OOS AK/SK、MySQL 连接
+python oos_uploader_southnotary.py
+```
+
+---
 
 | 能力 | 说明 |
 |------|------|
@@ -34,7 +48,9 @@
 ├── Dockerfile                       # 容器镜像
 ├── docker-compose.yml               # 容器编排
 ├── config/
-│   └── config.example.yaml          # 配置参考（非自动加载）
+│   ├── config.example.yaml          # 上传服务配置参考
+│   └── config.ini.example           # 录屏服务 config.ini 模板
+├── scrcpy_manager/                  # Android scrcpy 录屏调度服务
 ├── deploy/
 │   └── southnotary-uploader.service # systemd 单元文件
 ├── docs/
@@ -272,7 +288,7 @@ python3 -m southnotary_uploader
 | [docs/API.md](docs/API.md) | 公证处开放接口字段与示例 |
 | [docs/DATABASE.md](docs/DATABASE.md) | `tasktest` 表结构与 SQL |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | 安装、配置、上线检查清单 |
-| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | 常见故障与排查命令 |
+| [docs/DATA_FLOW.md](docs/DATA_FLOW.md) | 创基数据端到端流程（拉取→录屏→上传） |
 
 ---
 
